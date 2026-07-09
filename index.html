@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>汐鳴みりね 歌唱リスト</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="eyebrow">Mirine Singing Archive</p>
+      <h1>汐鳴みりね 歌唱リスト</h1>
+      <p class="lead">歌ってみた、Shorts、歌枠・配信内歌唱をまとめた非公式ファンリストです。</p>
+      <div class="stats" id="stats" aria-live="polite"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs" aria-label="表示切替">
+      <button class="tab-button active" type="button" data-tab="list">一覧</button>
+      <button class="tab-button" type="button" data-tab="covers">歌ってみた</button>
+      <button class="tab-button" type="button" data-tab="streams">歌枠</button>
+      <button class="tab-button" type="button" data-tab="artists">アーティスト別</button>
+    </nav>
+
+    <section class="tab-panel active" id="tab-list">
+      <div class="panel-heading">
+        <div>
+          <h2>一覧</h2>
+          <p>曲名、アーティスト名、配信タイトルなどで検索できます。</p>
+        </div>
+        <p class="result-count" id="list-count"></p>
+      </div>
+
+      <div class="controls">
+        <label class="search-box">
+          <span>キーワード検索</span>
+          <input type="search" id="keyword" placeholder="曲名・アーティスト名・配信タイトルなど">
+        </label>
+
+        <div class="filter-block">
+          <div class="filter-title-row">
+            <div class="filter-title">YouTube形式</div>
+            <div class="filter-buttons">
+              <button class="tiny-button" type="button" data-filter-action="select" data-filter-group-target="format">全て選択</button>
+              <button class="tiny-button" type="button" data-filter-action="clear" data-filter-group-target="format">全て外す</button>
+            </div>
+          </div>
+          <div class="chip-group" id="format-filters"></div>
+        </div>
+
+        <div class="filter-block">
+          <div class="filter-title-row">
+            <div class="filter-title">詳細区分</div>
+            <div class="filter-buttons">
+              <button class="tiny-button" type="button" data-filter-action="select" data-filter-group-target="detail">全て選択</button>
+              <button class="tiny-button" type="button" data-filter-action="clear" data-filter-group-target="detail">全て外す</button>
+            </div>
+          </div>
+          <div class="chip-group" id="detail-filters"></div>
+        </div>
+
+        <div class="filter-actions">
+          <button class="mini-button" type="button" id="reset-filters">フィルタ解除</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="song-table">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>日付</th>
+              <th>形式</th>
+              <th>区分</th>
+              <th>曲名</th>
+              <th>アーティスト</th>
+              <th>コラボ</th>
+              <th>掲載ch</th>
+              <th>配信・動画</th>
+              <th>聴く</th>
+              <th>備考</th>
+            </tr>
+          </thead>
+          <tbody id="song-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-covers">
+      <div class="panel-heading">
+        <div>
+          <h2>歌ってみた</h2>
+          <p>歌ってみた動画と歌みた系Shortsを、関連元ごとにまとめています。</p>
+        </div>
+        <p class="result-count" id="cover-count"></p>
+      </div>
+
+      <div class="cover-controls">
+        <label class="search-box narrow">
+          <span>歌ってみた検索</span>
+          <input type="search" id="cover-keyword" placeholder="曲名・アーティスト名・動画タイトルなど">
+        </label>
+
+        <div class="cover-filter-area" aria-label="歌ってみた表示条件">
+          <div class="inline-filter-group">
+            <div class="filter-title">表示対象</div>
+            <label class="chip">
+              <input type="checkbox" id="cover-full-filter" checked>
+              <span>歌みたフル</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" id="cover-short-filter" checked>
+              <span>歌Short</span>
+            </label>
+          </div>
+
+          <label class="chip related-option">
+            <input type="checkbox" id="cover-related-toggle" checked>
+            <span>関連コンテンツも一緒に表示</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card-grid cover-grid" id="cover-cards"></div>
+    </section>
+
+    <section class="tab-panel" id="tab-streams">
+      <div class="panel-heading">
+        <div>
+          <h2>歌枠</h2>
+          <p>Live Streamを配信ごとのカードにまとめています。歌ってみた動画とShortsはここでは除外しています。</p>
+        </div>
+        <p class="result-count" id="stream-count"></p>
+      </div>
+
+      <label class="search-box narrow">
+        <span>歌枠検索</span>
+        <input type="search" id="stream-keyword" placeholder="曲名・配信タイトル・アーティスト名など">
+      </label>
+
+      <div class="card-grid stream-grid" id="stream-cards"></div>
+    </section>
+
+    <section class="tab-panel" id="tab-artists">
+      <div class="panel-heading">
+        <div>
+          <h2>アーティスト別</h2>
+          <p>アーティストごとに、歌唱曲と歌唱回数をまとめています。</p>
+        </div>
+        <p class="result-count" id="artist-count"></p>
+      </div>
+
+      <label class="search-box narrow">
+        <span>アーティスト検索</span>
+        <input type="search" id="artist-keyword" placeholder="アーティスト名・曲名で検索">
+      </label>
+
+      <div class="artist-index" id="artist-index"></div>
+      <div class="card-grid artist-grid" id="artist-cards"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Data: <code>mirine_list.csv</code></p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
