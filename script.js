@@ -146,6 +146,10 @@ function countUnique(rows, key) {
   return new Set(rows.map((row) => row[key]).filter(Boolean)).size;
 }
 
+function countUniqueBy(rows, keyFn) {
+  return new Set(rows.map(keyFn).filter(Boolean)).size;
+}
+
 function groupBy(rows, keyFn) {
   const map = new Map();
   rows.forEach((row) => {
@@ -176,11 +180,24 @@ function matchesKeyword(row, keyword) {
 
 function renderStats() {
   const rows = state.rows;
+  const streamRows = rows.filter((row) => row.format === "Live Stream");
+  const fullCoverRows = rows.filter(isFullCoverRow);
+  const shortRows = rows.filter((row) => row.format === "Shorts");
+
+  const songCount = countUniqueBy(rows, (row) => {
+    const song = String(row["曲名"] || "").trim();
+    const artist = String(row["アーティスト名"] || "").trim();
+    return song ? `${song}\u0000${artist}` : "";
+  });
+
   const stats = [
-    [rows.length, "歌唱件数"],
-    [countUnique(rows, "曲名"), "曲"],
-    [getAllArtistNames(rows).length, "アーティスト"],
-    [countUnique(rows.filter((row) => row.format === "Live Stream"), "動画ID"), "配信"],
+    [rows.length, "歌唱データ件数"],
+    [songCount, "曲"],
+    [countUnique(rows, "アーティスト名"), "アーティスト"],
+    [countUnique(streamRows, "動画ID"), "歌枠"],
+    [streamRows.length, "歌枠歌唱数"],
+    [fullCoverRows.length, "歌ってみた（フル）"],
+    [shortRows.length, "Shorts"],
   ];
 
   $("#stats").innerHTML = stats
@@ -403,7 +420,6 @@ function renderCovers() {
                     </div>
                     <div class="cover-entry-title">${escapeHtml(row["配信タイトル"] || row["曲名"])}</div>
                     <div class="card-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("<span>／</span>")}</div>
-                    ${row["関連元"] ? `<span class="subtext">関連元: ${escapeHtml(row["関連元"])}</span>` : ""}
                     ${row["備考"] ? `<span class="subtext">${escapeHtml(row["備考"])}</span>` : ""}
                   </div>
                   ${renderListenLink(row)}
@@ -575,20 +591,30 @@ function bindArtistIndexButtons() {
   });
 }
 
+function activateTab(tabName, { scroll = true } = {}) {
+  $$('.tab-button').forEach((button) => {
+    button.classList.toggle("active", button.dataset.tab === tabName);
+  });
+  $$('.tab-panel').forEach((panel) => {
+    panel.classList.toggle("active", panel.id === `tab-${tabName}`);
+  });
+  history.replaceState(null, "", `#${tabName}`);
+
+  if (scroll) {
+    $(".tabs").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
 function setupTabs() {
   $$('.tab-button').forEach((button) => {
     button.addEventListener("click", () => {
-      $$('.tab-button').forEach((btn) => btn.classList.remove("active"));
-      $$('.tab-panel').forEach((panel) => panel.classList.remove("active"));
-      button.classList.add("active");
-      $(`#tab-${button.dataset.tab}`).classList.add("active");
-      history.replaceState(null, "", `#${button.dataset.tab}`);
+      activateTab(button.dataset.tab);
     });
   });
 
   const initialTab = location.hash.replace("#", "");
   if (["list", "covers", "streams", "artists"].includes(initialTab)) {
-    document.querySelector(`[data-tab="${initialTab}"]`).click();
+    activateTab(initialTab, { scroll: false });
   }
 }
 
