@@ -122,6 +122,22 @@ function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
 }
 
+function getArtistNames(row) {
+  const searchNames = String(row["検索用アーティスト名"] || "")
+    .split("/")
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+  if (searchNames.length) return [...new Set(searchNames)];
+
+  const displayName = String(row["アーティスト名"] || "").trim();
+  return [displayName || "未入力"];
+}
+
+function getAllArtistNames(rows) {
+  return uniqueSorted(rows.flatMap((row) => getArtistNames(row)));
+}
+
 function sortRows(rows) {
   return [...rows].sort((a, b) => a.sortKey.localeCompare(b.sortKey, "ja"));
 }
@@ -145,6 +161,7 @@ function matchesKeyword(row, keyword) {
   const target = [
     row["曲名"],
     row["アーティスト名"],
+    row["検索用アーティスト名"],
     row["配信タイトル"],
     row["コラボ"],
     row["掲載ch"],
@@ -162,7 +179,7 @@ function renderStats() {
   const stats = [
     [rows.length, "歌唱件数"],
     [countUnique(rows, "曲名"), "曲"],
-    [countUnique(rows, "アーティスト名"), "アーティスト"],
+    [getAllArtistNames(rows).length, "アーティスト"],
     [countUnique(rows.filter((row) => row.format === "Live Stream"), "動画ID"), "配信"],
   ];
 
@@ -450,12 +467,28 @@ function renderStreams() {
 
 function renderArtists() {
   const keyword = $("#artist-keyword").value.trim().toLowerCase();
-  const artistGroups = [...groupBy(sortRows(state.rows), (row) => row["アーティスト名"] || "未入力").entries()]
+  const artistMap = new Map();
+
+  sortRows(state.rows).forEach((row) => {
+    getArtistNames(row).forEach((artist) => {
+      if (!artistMap.has(artist)) artistMap.set(artist, []);
+      artistMap.get(artist).push(row);
+    });
+  });
+
+  const artistGroups = [...artistMap.entries()]
     .map(([artist, rows]) => ({ artist, rows }))
     .filter((group) => {
       if (state.selectedArtist && group.artist !== state.selectedArtist) return false;
       if (!keyword) return true;
-      const target = [group.artist, ...group.rows.map((row) => row["曲名"])].join(" ").toLowerCase();
+      const target = [
+        group.artist,
+        ...group.rows.flatMap((row) => [
+          row["曲名"],
+          row["アーティスト名"],
+          row["検索用アーティスト名"],
+        ]),
+      ].join(" ").toLowerCase();
       return target.includes(keyword);
     })
     .sort((a, b) => a.artist.localeCompare(b.artist, "ja"));
@@ -464,7 +497,7 @@ function renderArtists() {
     ? `${artistGroups.length}アーティスト / ${state.selectedArtist}で絞り込み中`
     : `${artistGroups.length}アーティスト`;
 
-  const allArtists = uniqueSorted(state.rows.map((row) => row["アーティスト名"] || "未入力"));
+  const allArtists = getAllArtistNames(state.rows);
   $("#artist-index").innerHTML = `
     <button type="button" class="artist-index-button ${state.selectedArtist ? "" : "active"}" data-artist-filter="">全アーティスト表示</button>
     ${allArtists.map((artist) => `
@@ -492,10 +525,15 @@ function renderArtists() {
         </div>
         <div class="card-body artist-details">
           <ul class="artist-song-list">
-            ${songGroups.map(([songName, rows]) => `
+            ${songGroups.map(([songName, rows]) => {
+              const originalArtistNames = uniqueSorted(
+                rows.map((row) => String(row["アーティスト名"] || "").trim())
+              );
+              return `
               <li class="artist-song-item">
                 <div class="artist-song-heading">
                   <span class="song-title">${escapeHtml(songName)}</span>
+                  <span class="original-artist-name">${escapeHtml(originalArtistNames.join(" ／ ") || "アーティスト名未入力")}</span>
                   <span class="song-count-muted">${rows.length}回歌唱</span>
                 </div>
                 <div class="song-occurrences">
@@ -510,7 +548,8 @@ function renderArtists() {
                   `).join("")}
                 </div>
               </li>
-            `).join("")}
+              `;
+            }).join("")}
           </ul>
         </div>
       </article>

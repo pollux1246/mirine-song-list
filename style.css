@@ -687,3 +687,21 @@ h1 {
   color: var(--muted);
   background: #fff;
 }
+
+.original-artist-name {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.original-artist-name::before {
+  content: "／";
+  margin-right: 0.5rem;
+  color: var(--line);
+}
+
+@media (max-width: 720px) {
+  .original-artist-name::before {
+    margin-right: 0.35rem;
+  }
+}
