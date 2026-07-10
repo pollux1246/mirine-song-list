@@ -381,7 +381,7 @@ function renderCovers() {
     .sort((a, b) => a.groupSortKey.localeCompare(b.groupSortKey, "ja"));
 
   const visibleRowsCount = groups.reduce((total, group) => total + group.rows.length, 0);
-  $("#cover-count").textContent = `${groups.length}件 / ${visibleRowsCount}本`;
+  $("#cover-count").textContent = `${groups.length}曲 / ${visibleRowsCount}本`;
 
   if (!groups.length) {
     $("#cover-cards").innerHTML = `<div class="empty">条件に合う歌ってみたがありません。</div>`;
@@ -601,7 +601,10 @@ function activateTab(tabName, { scroll = true } = {}) {
   history.replaceState(null, "", `#${tabName}`);
 
   if (scroll) {
-    $(".tabs").scrollIntoView({ behavior: "smooth", block: "start" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 }
 
