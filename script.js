@@ -17,6 +17,7 @@ const state = {
   selectedFormats: new Set(),
   selectedDetails: new Set(),
   selectedArtist: "",
+  indexMode: "song",
   coverFilters: {
     full: true,
     short: true,
@@ -148,20 +149,69 @@ function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
 }
 
-function getArtistNames(row) {
-  const searchNames = String(row["検索用アーティスト名"] || "")
+function splitSlashValues(value) {
+  return String(value || "")
     .split("/")
-    .map((name) => name.trim())
+    .map((item) => item.trim())
     .filter(Boolean);
+}
 
-  if (searchNames.length) return [...new Set(searchNames)];
-
+function getArtistEntries(row) {
+  const searchNames = splitSlashValues(row["検索用アーティスト名"]);
   const displayName = String(row["アーティスト名"] || "").trim();
-  return [displayName || "未入力"];
+  const names = searchNames.length ? searchNames : [displayName || "未入力"];
+  const readings = splitSlashValues(row["検索用アーティスト名よみ"]);
+
+  const seen = new Set();
+  return names
+    .map((name, index) => ({
+      name,
+      reading: readings[index] || name,
+    }))
+    .filter((entry) => {
+      if (seen.has(entry.name)) return false;
+      seen.add(entry.name);
+      return true;
+    });
+}
+
+function getArtistNames(row) {
+  return getArtistEntries(row).map((entry) => entry.name);
+}
+
+function compareArtistEntries(a, b) {
+  const aName = String(a.name ?? a.artist ?? "");
+  const bName = String(b.name ?? b.artist ?? "");
+  const aReading = String(a.reading || aName);
+  const bReading = String(b.reading || bName);
+
+  const readingCompare = aReading.localeCompare(bReading, "ja", {
+    sensitivity: "base",
+    numeric: true,
+  });
+
+  return readingCompare || aName.localeCompare(bName, "ja", {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
+function getAllArtistEntries(rows) {
+  const artistMap = new Map();
+  rows.forEach((row) => {
+    getArtistEntries(row).forEach((entry) => {
+      const current = artistMap.get(entry.name);
+      const hasExplicitReading = entry.reading !== entry.name;
+      if (!current || (hasExplicitReading && current.reading === current.name)) {
+        artistMap.set(entry.name, entry);
+      }
+    });
+  });
+  return [...artistMap.values()].sort(compareArtistEntries);
 }
 
 function getAllArtistNames(rows) {
-  return uniqueSorted(rows.flatMap((row) => getArtistNames(row)));
+  return getAllArtistEntries(rows).map((entry) => entry.name);
 }
 
 function sortRows(rows) {
@@ -192,6 +242,7 @@ function matchesKeyword(row, keyword) {
     row["曲名"],
     row["アーティスト名"],
     row["検索用アーティスト名"],
+    row["検索用アーティスト名よみ"],
     row["配信タイトル"],
     row["コラボ"],
     row["掲載ch"],
@@ -371,6 +422,241 @@ function makeCoverGroupId(row, rowById) {
   return current?.["歌唱ID"] || row["関連元"] || row["歌唱ID"] || row["動画ID"] || row.URL;
 }
 
+
+function makeSongKey(row) {
+  const song = String(row["曲名"] || "").trim();
+  const artist = String(row["アーティスト名"] || "").trim();
+  return `${song}\u0000${artist}`;
+}
+
+const INDEX_SECTION_ORDER = [
+  "あ行",
+  "か行",
+  "さ行",
+  "た行",
+  "な行",
+  "は行",
+  "ま行",
+  "や行",
+  "ら行",
+  "わ行",
+  "A–Z",
+  "数字・記号",
+  "その他",
+];
+
+function katakanaToHiragana(value) {
+  return String(value || "").replace(/[ァ-ヶ]/g, (char) =>
+    String.fromCharCode(char.charCodeAt(0) - 0x60)
+  );
+}
+
+function normalizeKanaInitial(value) {
+  const text = katakanaToHiragana(String(value || "").trim());
+  if (!text) return "";
+
+  const first = [...text.normalize("NFD")][0] || "";
+  const smallKanaMap = {
+    "ぁ": "あ", "ぃ": "い", "ぅ": "う", "ぇ": "え", "ぉ": "お",
+    "ゃ": "や", "ゅ": "ゆ", "ょ": "よ", "っ": "つ", "ゎ": "わ",
+  };
+  return smallKanaMap[first] || first;
+}
+
+function getSongSortText(row) {
+  return String(row["曲名よみ"] || row["曲名"] || "").trim();
+}
+
+function getIndexSection(row) {
+  const sortText = getSongSortText(row);
+  if (!sortText) return "その他";
+
+  const first = [...sortText][0];
+  if (/[A-Za-z]/.test(first)) return "A–Z";
+  if (/[0-9]/.test(first)) return "数字・記号";
+
+  const kana = normalizeKanaInitial(sortText);
+  if ("あいうえお".includes(kana)) return "あ行";
+  if ("かきくけこ".includes(kana)) return "か行";
+  if ("さしすせそ".includes(kana)) return "さ行";
+  if ("たちつてと".includes(kana)) return "た行";
+  if ("なにぬねの".includes(kana)) return "な行";
+  if ("はひふへほ".includes(kana)) return "は行";
+  if ("まみむめも".includes(kana)) return "ま行";
+  if ("やゆよ".includes(kana)) return "や行";
+  if ("らりるれろ".includes(kana)) return "ら行";
+  if ("わをん".includes(kana)) return "わ行";
+
+  if (/^[^\p{L}\p{N}]/u.test(first)) return "数字・記号";
+  return "その他";
+}
+
+function compareSongIndexEntries(a, b) {
+  const aText = getSongSortText(a.rows[0]);
+  const bText = getSongSortText(b.rows[0]);
+  const readingCompare = aText.localeCompare(bText, "ja", {
+    sensitivity: "base",
+    numeric: true,
+  });
+  if (readingCompare) return readingCompare;
+
+  const songCompare = a.song.localeCompare(b.song, "ja", {
+    sensitivity: "base",
+    numeric: true,
+  });
+  return songCompare || a.artist.localeCompare(b.artist, "ja");
+}
+
+function renderIndexOccurrences(rows) {
+  return `
+    <div class="index-occurrences">
+      ${sortRows(rows).map((row) => `
+        <div class="index-occurrence">
+          <span>${escapeHtml(row["日付"])}</span>
+          <span>${escapeHtml(row.format)}</span>
+          <span>${escapeHtml(row.detail)}</span>
+          ${row["配信タイトル"] ? `<span>${escapeHtml(row["配信タイトル"])}</span>` : ""}
+          ${renderListenLink(row, "聴く")}
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderIndexSongMode(rows) {
+  const songGroups = [...groupBy(rows, makeSongKey).entries()]
+    .map(([key, groupRows]) => ({
+      key,
+      rows: groupRows,
+      song: groupRows[0]["曲名"] || "曲名未入力",
+      artist: groupRows[0]["アーティスト名"] || "アーティスト名未入力",
+    }))
+    .sort(compareSongIndexEntries);
+
+  const sections = groupBy(songGroups, (group) => getIndexSection(group.rows[0]));
+  return INDEX_SECTION_ORDER
+    .filter((sectionName) => sections.has(sectionName))
+    .map((sectionName) => {
+      const groups = sections.get(sectionName);
+      return `
+        <section class="index-section">
+          <h3 class="index-section-title">${escapeHtml(sectionName)}</h3>
+          <ul class="dense-index-list">
+            ${groups.map((group) => `
+              <li class="dense-index-item">
+                <button class="index-entry-button" type="button" aria-expanded="false">
+                  <span class="index-entry-main">
+                    <span class="song-title">${escapeHtml(group.song)}</span>
+                    <span class="index-separator"> / </span>
+                    <span class="index-artist-credit">${escapeHtml(group.artist)}</span>
+                  </span>
+                  <span class="index-entry-count">${group.rows.length}回</span>
+                </button>
+                <div class="index-entry-details" hidden>
+                  ${renderIndexOccurrences(group.rows)}
+                </div>
+              </li>
+            `).join("")}
+          </ul>
+        </section>
+      `;
+    }).join("");
+}
+
+function renderIndexArtistMode(rows) {
+  const artistMap = new Map();
+  rows.forEach((row) => {
+    getArtistEntries(row).forEach(({ name, reading }) => {
+      if (!artistMap.has(name)) artistMap.set(name, { reading, rows: [] });
+      const group = artistMap.get(name);
+      if (group.reading === name && reading !== name) group.reading = reading;
+      group.rows.push(row);
+    });
+  });
+
+  return [...artistMap.entries()]
+    .map(([artist, group]) => ({ artist, reading: group.reading, artistRows: group.rows }))
+    .sort(compareArtistEntries)
+    .map(({ artist, artistRows }) => {
+      const songs = [...groupBy(artistRows, makeSongKey).entries()]
+        .map(([, groupRows]) => ({
+          rows: groupRows,
+          song: groupRows[0]["曲名"] || "曲名未入力",
+          originalArtist: groupRows[0]["アーティスト名"] || "アーティスト名未入力",
+        }))
+        .sort((a, b) => {
+          const aReading = getSongSortText(a.rows[0]);
+          const bReading = getSongSortText(b.rows[0]);
+          const readingCompare = aReading.localeCompare(bReading, "ja", {
+            sensitivity: "base",
+            numeric: true,
+          });
+          return readingCompare || a.song.localeCompare(b.song, "ja");
+        });
+
+      return `
+        <section class="index-section artist-index-section">
+          <h3 class="index-section-title">${escapeHtml(artist)}</h3>
+          <ul class="dense-index-list">
+            ${songs.map((song) => `
+              <li class="dense-index-item">
+                <button class="index-entry-button" type="button" aria-expanded="false">
+                  <span class="index-entry-main">
+                    <span class="song-title">${escapeHtml(song.song)}</span>
+                    <span class="index-separator"> / </span>
+                    <span class="index-artist-credit">${escapeHtml(song.originalArtist)}</span>
+                  </span>
+                  <span class="index-entry-count">${song.rows.length}回</span>
+                </button>
+                <div class="index-entry-details" hidden>
+                  ${renderIndexOccurrences(song.rows)}
+                </div>
+              </li>
+            `).join("")}
+          </ul>
+        </section>
+      `;
+    }).join("");
+}
+
+function bindIndexEntries() {
+  $$(".index-entry-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const details = button.nextElementSibling;
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", String(!isOpen));
+      details.hidden = isOpen;
+    });
+  });
+}
+
+function renderSongIndex() {
+  const keyword = $("#index-keyword").value.trim().toLowerCase();
+  const rows = state.rows.filter((row) => {
+    if (!keyword) return true;
+    return [
+      row["曲名"],
+      row["曲名よみ"],
+      row["アーティスト名"],
+      row["検索用アーティスト名"],
+      row["検索用アーティスト名よみ"],
+    ].join(" ").toLowerCase().includes(keyword);
+  });
+
+  const uniqueSongCount = countUniqueBy(rows, makeSongKey);
+  $("#index-count").textContent = `${uniqueSongCount}曲`;
+
+  if (!rows.length) {
+    $("#song-index").innerHTML = `<div class="empty">条件に合う曲がありません。</div>`;
+    return;
+  }
+
+  $("#song-index").innerHTML = state.indexMode === "artist"
+    ? renderIndexArtistMode(rows)
+    : renderIndexSongMode(rows);
+  bindIndexEntries();
+}
+
 function renderCovers() {
   const keyword = $("#cover-keyword").value.trim();
   const rowById = new Map(state.rows.map((row) => [row["歌唱ID"], row]));
@@ -518,28 +804,32 @@ function renderArtists() {
   const artistMap = new Map();
 
   sortRows(state.rows).forEach((row) => {
-    getArtistNames(row).forEach((artist) => {
-      if (!artistMap.has(artist)) artistMap.set(artist, []);
-      artistMap.get(artist).push(row);
+    getArtistEntries(row).forEach(({ name, reading }) => {
+      if (!artistMap.has(name)) artistMap.set(name, { reading, rows: [] });
+      const group = artistMap.get(name);
+      if (group.reading === name && reading !== name) group.reading = reading;
+      group.rows.push(row);
     });
   });
 
   const artistGroups = [...artistMap.entries()]
-    .map(([artist, rows]) => ({ artist, rows }))
+    .map(([artist, group]) => ({ artist, reading: group.reading, rows: group.rows }))
     .filter((group) => {
       if (state.selectedArtist && group.artist !== state.selectedArtist) return false;
       if (!keyword) return true;
       const target = [
         group.artist,
+        group.reading,
         ...group.rows.flatMap((row) => [
           row["曲名"],
           row["アーティスト名"],
           row["検索用アーティスト名"],
+          row["検索用アーティスト名よみ"],
         ]),
       ].join(" ").toLowerCase();
       return target.includes(keyword);
     })
-    .sort((a, b) => a.artist.localeCompare(b.artist, "ja"));
+    .sort(compareArtistEntries);
 
   $("#artist-count").textContent = state.selectedArtist
     ? `${artistGroups.length}アーティスト / ${state.selectedArtist}で絞り込み中`
@@ -648,13 +938,21 @@ function setupTabs() {
   });
 
   const initialTab = location.hash.replace("#", "");
-  if (["list", "covers", "streams", "artists"].includes(initialTab)) {
+  if (["list", "index", "covers", "streams", "artists"].includes(initialTab)) {
     activateTab(initialTab, { scroll: false });
   }
 }
 
 function setupEvents() {
   $("#keyword").addEventListener("input", renderList);
+  $("#index-keyword").addEventListener("input", renderSongIndex);
+  $$('[data-index-mode]').forEach((button) => {
+    button.addEventListener("click", () => {
+      state.indexMode = button.dataset.indexMode;
+      $$('[data-index-mode]').forEach((item) => item.classList.toggle("active", item === button));
+      renderSongIndex();
+    });
+  });
   $("#cover-keyword").addEventListener("input", renderCovers);
   $("#cover-full-filter").addEventListener("change", (event) => {
     state.coverFilters.full = event.target.checked;
@@ -700,6 +998,7 @@ async function init() {
     renderStats();
     renderFilters();
     renderList();
+    renderSongIndex();
     renderCovers();
     renderStreams();
     renderArtists();
