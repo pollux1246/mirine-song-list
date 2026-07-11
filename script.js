@@ -106,6 +106,31 @@ function buildListenUrl(row) {
   return `${url}${separator}t=${seconds}s`;
 }
 
+function splitFeatureTags(value) {
+  return [...new Set(
+    String(value || "")
+      .split("/")
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+  )];
+}
+
+function getCommonFeatureTags(rows) {
+  if (!rows.length) return [];
+  const [first, ...rest] = rows;
+  return first.featureTags.filter((tag) =>
+    rest.every((row) => row.featureTags.includes(tag))
+  );
+}
+
+function renderFeatureTags(tags, className = "") {
+  if (!tags.length) return "";
+  const extraClass = className ? ` ${className}` : "";
+  return `<div class="feature-tag-row${extraClass}">${tags
+    .map((tag) => `<span class="feature-tag">${escapeHtml(tag)}</span>`)
+    .join("")}</div>`;
+}
+
 function normalizeRow(row) {
   return {
     ...row,
@@ -113,6 +138,7 @@ function normalizeRow(row) {
     sortKey: row["ソートキー"] || "99999999-9-999",
     format: row["YouTube形式"] || "未分類",
     detail: row["詳細区分"] || "未分類",
+    featureTags: splitFeatureTags(row["特徴タグ"]),
     channel: row["掲載ch"] || "",
     order: Number(row["曲順"] || 0),
   };
@@ -454,25 +480,31 @@ function renderStreams() {
     const first = rows[0];
     const title = first["配信タイトル"];
     const meta = [first["日付"], first.detail, first["コラボ"] ? `コラボ: ${first["コラボ"]}` : "", first.channel ? `掲載ch: ${first.channel}` : ""].filter(Boolean);
+    const commonFeatureTags = getCommonFeatureTags(rows);
     return `
       <article class="card stream-card" id="stream-${escapeHtml(videoId)}">
         <div class="card-header">
           <div class="card-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("<span>／</span>")}</div>
           <h3 class="card-title">${escapeHtml(title)}</h3>
           <div class="badge-row">${renderBadges(first)}</div>
+          ${renderFeatureTags(commonFeatureTags, "stream-feature-tags")}
         </div>
         <div class="card-body">
           <ul class="track-list">
-            ${rows.map((row) => `
+            ${rows.map((row) => {
+              const rowOnlyTags = row.featureTags.filter((tag) => !commonFeatureTags.includes(tag));
+              return `
               <li class="track-item">
                 <span class="track-number">${escapeHtml(row["曲順"] || "-")}</span>
                 <span>
                   <span class="song-title">${escapeHtml(row["曲名"])}</span>
                   <span class="subtext">${escapeHtml(row["アーティスト名"])}${row["備考"] ? ` / ${escapeHtml(row["備考"])}` : ""}</span>
+                  ${renderFeatureTags(rowOnlyTags, "track-feature-tags")}
                 </span>
                 ${renderListenLink(row)}
               </li>
-            `).join("")}
+            `;
+            }).join("")}
           </ul>
           ${first.URL ? `<p><a class="jump-link" href="${escapeHtml(first.URL)}" target="_blank" rel="noopener">配信を見る</a></p>` : ""}
         </div>
