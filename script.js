@@ -13,9 +13,8 @@ const state = {
   rows: [],
   filteredRows: [],
   formats: [],
-  details: [],
-  selectedFormats: new Set(),
-  selectedDetails: new Set(),
+  detailsByFormat: new Map(),
+  selectedDetailKeys: new Set(),
   selectedArtist: "",
   indexMode: "song",
   coverFilters: {
@@ -287,44 +286,99 @@ function renderStats() {
     .join("");
 }
 
-function makeFilterChip(groupName, value, index, checked = true) {
-  const safeId = `${groupName}-${index}`;
-  return `
-    <label class="chip" for="${escapeHtml(safeId)}">
-      <input id="${escapeHtml(safeId)}" type="checkbox" data-filter-group="${escapeHtml(groupName)}" value="${escapeHtml(value)}" ${checked ? "checked" : ""}>
-      <span>${escapeHtml(value)}</span>
-    </label>
-  `;
+function makeFilterKey(format, detail) {
+  return `${format}\u0000${detail}`;
+}
+
+function getFormatOrder(format) {
+  const preferred = ["Live Stream", "Shorts", "Video"];
+  const index = preferred.indexOf(format);
+  return index === -1 ? preferred.length : index;
 }
 
 function renderFilters() {
-  state.formats = uniqueSorted(state.rows.map((row) => row.format));
-  state.details = uniqueSorted(state.rows.map((row) => row.detail));
-  state.selectedFormats = new Set(state.formats);
-  state.selectedDetails = new Set(state.details);
+  state.formats = uniqueSorted(state.rows.map((row) => row.format))
+    .sort((a, b) => getFormatOrder(a) - getFormatOrder(b) || a.localeCompare(b, "ja"));
 
-  $("#format-filters").innerHTML = state.formats.map((value, index) => makeFilterChip("format", value, index)).join("");
-  $("#detail-filters").innerHTML = state.details.map((value, index) => makeFilterChip("detail", value, index)).join("");
+  state.detailsByFormat = new Map(
+    state.formats.map((format) => [
+      format,
+      uniqueSorted(
+        state.rows
+          .filter((row) => row.format === format)
+          .map((row) => row.detail)
+      ),
+    ])
+  );
+  state.selectedDetailKeys.clear();
 
-  $$('[data-filter-group]').forEach((input) => {
-    input.addEventListener("change", () => {
-      const set = input.dataset.filterGroup === "format" ? state.selectedFormats : state.selectedDetails;
-      if (input.checked) set.add(input.value);
-      else set.delete(input.value);
+  $("#hierarchical-filters").innerHTML = state.formats.map((format, formatIndex) => {
+    const details = state.detailsByFormat.get(format) || [];
+    const parentId = `format-parent-${formatIndex}`;
+    const children = details.map((detail, detailIndex) => {
+      const childId = `format-detail-${formatIndex}-${detailIndex}`;
+      return `
+        <label class="chip hierarchy-child" for="${childId}">
+          <input id="${childId}" type="checkbox" data-filter-child data-format="${escapeHtml(format)}" value="${escapeHtml(detail)}">
+          <span>${escapeHtml(detail)}</span>
+        </label>
+      `;
+    }).join("");
+
+    return `
+      <div class="hierarchy-row" data-filter-row="${escapeHtml(format)}">
+        <div class="hierarchy-parent-cell">
+          <label class="hierarchy-parent" for="${parentId}">
+            <input id="${parentId}" type="checkbox" data-filter-parent value="${escapeHtml(format)}">
+            <span>${escapeHtml(format)}</span>
+          </label>
+        </div>
+        <div class="hierarchy-children-cell">${children}</div>
+      </div>
+    `;
+  }).join("");
+
+  $$('[data-filter-parent]').forEach((parent) => {
+    parent.addEventListener("change", () => {
+      const format = parent.value;
+      const children = $$(`[data-filter-child][data-format="${CSS.escape(format)}"]`);
+      children.forEach((child) => {
+        child.checked = parent.checked;
+        const key = makeFilterKey(format, child.value);
+        if (parent.checked) state.selectedDetailKeys.add(key);
+        else state.selectedDetailKeys.delete(key);
+      });
+      parent.indeterminate = false;
+      renderList();
+    });
+  });
+
+  $$('[data-filter-child]').forEach((child) => {
+    child.addEventListener("change", () => {
+      const key = makeFilterKey(child.dataset.format, child.value);
+      if (child.checked) state.selectedDetailKeys.add(key);
+      else state.selectedDetailKeys.delete(key);
+      updateParentCheckbox(child.dataset.format);
       renderList();
     });
   });
 }
 
-function setFilterGroup(groupName, shouldSelect) {
-  const set = groupName === "format" ? state.selectedFormats : state.selectedDetails;
-  set.clear();
+function updateParentCheckbox(format) {
+  const parent = $(`[data-filter-parent][value="${CSS.escape(format)}"]`);
+  const children = $$(`[data-filter-child][data-format="${CSS.escape(format)}"]`);
+  if (!parent || !children.length) return;
+  const checkedCount = children.filter((child) => child.checked).length;
+  parent.checked = checkedCount === children.length;
+  parent.indeterminate = checkedCount > 0 && checkedCount < children.length;
+}
 
-  $$(`[data-filter-group="${groupName}"]`).forEach((input) => {
-    input.checked = shouldSelect;
-    if (shouldSelect) set.add(input.value);
+function clearHierarchicalFilters() {
+  state.selectedDetailKeys.clear();
+  $$('[data-filter-child], [data-filter-parent]').forEach((input) => {
+    input.checked = false;
+    input.indeterminate = false;
   });
-
   renderList();
 }
 
@@ -344,10 +398,10 @@ function renderListenLink(row, label = "聴く") {
 
 function renderList() {
   const keyword = $("#keyword").value.trim();
+  const filterActive = state.selectedDetailKeys.size > 0;
   const rows = sortRows(state.rows).filter((row) => {
-    return state.selectedFormats.has(row.format) &&
-      state.selectedDetails.has(row.detail) &&
-      matchesKeyword(row, keyword);
+    const matchesSelection = !filterActive || state.selectedDetailKeys.has(makeFilterKey(row.format, row.detail));
+    return matchesSelection && matchesKeyword(row, keyword);
   });
   state.filteredRows = rows;
 
@@ -974,14 +1028,7 @@ function setupEvents() {
 
   $("#reset-filters").addEventListener("click", () => {
     $("#keyword").value = "";
-    setFilterGroup("format", true);
-    setFilterGroup("detail", true);
-  });
-
-  $$('[data-filter-action]').forEach((button) => {
-    button.addEventListener("click", () => {
-      setFilterGroup(button.dataset.filterGroupTarget, button.dataset.filterAction === "select");
-    });
+    clearHierarchicalFilters();
   });
 }
 

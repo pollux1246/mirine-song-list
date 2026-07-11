@@ -40,26 +40,14 @@
           <input type="search" id="keyword" placeholder="曲名・アーティスト名・配信タイトルなど">
         </label>
 
-        <div class="filter-block">
+        <div class="filter-block hierarchical-filter-block">
           <div class="filter-title-row">
-            <div class="filter-title">YouTube形式</div>
-            <div class="filter-buttons">
-              <button class="tiny-button" type="button" data-filter-action="select" data-filter-group-target="format">全て選択</button>
-              <button class="tiny-button" type="button" data-filter-action="clear" data-filter-group-target="format">全て外す</button>
+            <div>
+              <div class="filter-title">形式・詳細区分</div>
+              <p class="filter-help">未選択時はすべて表示</p>
             </div>
           </div>
-          <div class="chip-group" id="format-filters"></div>
-        </div>
-
-        <div class="filter-block">
-          <div class="filter-title-row">
-            <div class="filter-title">詳細区分</div>
-            <div class="filter-buttons">
-              <button class="tiny-button" type="button" data-filter-action="select" data-filter-group-target="detail">全て選択</button>
-              <button class="tiny-button" type="button" data-filter-action="clear" data-filter-group-target="detail">全て外す</button>
-            </div>
-          </div>
-          <div class="chip-group" id="detail-filters"></div>
+          <div class="hierarchical-filters" id="hierarchical-filters"></div>
         </div>
 
         <div class="filter-actions">

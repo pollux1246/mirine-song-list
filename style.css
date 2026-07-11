@@ -881,3 +881,72 @@ h1 {
     margin-left: 0;
   }
 }
+
+/* Hierarchical list filters */
+.filter-help {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.hierarchical-filters {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.hierarchy-row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.28fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.hierarchy-row + .hierarchy-row {
+  border-top: 1px solid var(--line);
+}
+
+.hierarchy-parent-cell {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border-right: 1px solid var(--line);
+  background: rgba(182, 86, 106, 0.055);
+}
+
+.hierarchy-parent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--main-dark);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.hierarchy-children-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.hierarchy-child {
+  margin: 0;
+}
+
+@media (max-width: 680px) {
+  .hierarchy-row {
+    grid-template-columns: 1fr;
+  }
+
+  .hierarchy-parent-cell {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hierarchy-children-cell {
+    padding-left: 1rem;
+  }
+}
