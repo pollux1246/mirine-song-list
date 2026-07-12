@@ -18,6 +18,7 @@ const state = {
   selectedArtist: "",
   indexMode: "song",
   streamOrder: "newest",
+  coverOrder: "newest",
   coverFilters: {
     full: false,
     short: false,
@@ -766,6 +767,7 @@ function renderCovers() {
   const targetRows = allCoverRows.filter((row) =>
     isSelectedCoverKind(row) && matchesKeyword(row, keyword)
   );
+  const targetRowSet = new Set(targetRows);
   const selectedGroupIds = new Set(targetRows.map((row) => makeCoverGroupId(row, rowById)));
 
   const groups = [...selectedGroupIds]
@@ -783,14 +785,23 @@ function renderCovers() {
 
       const parent = rowById.get(groupId);
       const representative = parent && isCoverRow(parent) ? parent : sortedRows[0];
-      const groupSortKey = groupRows.reduce((min, row) => row.sortKey < min ? row.sortKey : min, groupRows[0]?.sortKey || "99999999-9-999");
+      const targetGroupRows = groupRows.filter((row) => targetRowSet.has(row));
+      const groupSortKey = parent && isCoverRow(parent)
+        ? parent.sortKey
+        : groupRows.reduce(
+            (min, row) => row.sortKey < min ? row.sortKey : min,
+            groupRows[0]?.sortKey || "99999999-9-999"
+          );
       const hasFullCover = groupRows.some(isFullCoverRow);
-      const targetIdSet = new Set(targetRows.map((row) => row["歌唱ID"]));
+      const targetIdSet = new Set(targetGroupRows.map((row) => row["歌唱ID"]));
 
       return { groupId, rows: sortedRows, representative, groupSortKey, hasFullCover, targetIdSet };
     })
     .filter((group) => group.rows.length)
-    .sort((a, b) => a.groupSortKey.localeCompare(b.groupSortKey, "ja"));
+    .sort((a, b) => {
+      const comparison = a.groupSortKey.localeCompare(b.groupSortKey, "ja");
+      return state.coverOrder === "newest" ? -comparison : comparison;
+    });
 
   const visibleRowsCount = groups.reduce((total, group) => total + group.rows.length, 0);
   $("#cover-count").textContent = `${groups.length}曲 / ${visibleRowsCount}本`;
@@ -868,14 +879,20 @@ function renderStreams() {
   $("#stream-cards").innerHTML = groups.map(([videoId, rows]) => {
     const first = rows[0];
     const title = first["配信タイトル"];
-    const meta = [first["日付"], first.detail, first["コラボ"] ? `コラボ: ${first["コラボ"]}` : "", first.channel ? `掲載ch: ${first.channel}` : ""].filter(Boolean);
+    const additionalMeta = [
+      first["コラボ"] ? `コラボ: ${first["コラボ"]}` : "",
+      first.channel ? `掲載ch: ${first.channel}` : "",
+    ].filter(Boolean);
     const commonFeatureTags = getCommonFeatureTags(rows);
     return `
       <article class="card stream-card" id="stream-${escapeHtml(videoId)}">
         <div class="card-header">
-          <div class="card-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("<span>／</span>")}</div>
+          <div class="card-meta">
+            <span>${escapeHtml(first["日付"])}</span>
+            ${additionalMeta.map((item) => `<span>／ ${escapeHtml(item)}</span>`).join("")}
+          </div>
           <h3 class="card-title">${escapeHtml(title)}</h3>
-          <div class="badge-row">${renderBadges(first)}</div>
+          <div class="badge-row"><span class="badge sub">${escapeHtml(first.detail)}</span></div>
           ${renderFeatureTags(commonFeatureTags, "stream-feature-tags")}
         </div>
         <div class="card-body">
@@ -1068,6 +1085,13 @@ function setupEvents() {
   $("#cover-related-toggle").addEventListener("change", (event) => {
     state.coverFilters.includeRelated = event.target.checked;
     renderCovers();
+  });
+  $$(`[data-cover-order]`).forEach((button) => {
+    button.addEventListener("click", () => {
+      state.coverOrder = button.dataset.coverOrder;
+      $$(`[data-cover-order]`).forEach((item) => item.classList.toggle("active", item === button));
+      renderCovers();
+    });
   });
   $("#stream-keyword").addEventListener("input", renderStreams);
   $$(`[data-stream-order]`).forEach((button) => {

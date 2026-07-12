@@ -611,6 +611,38 @@ h1 {
   margin-bottom: 1rem;
 }
 
+
+.cover-search-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cover-search-row .search-box.narrow {
+  flex: 1 1 36rem;
+  margin-bottom: 0;
+}
+
+.cover-order-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cover-order-switch .mini-button.active {
+  color: #fff;
+  background: var(--main);
+}
+
+@media (max-width: 720px) {
+  .cover-search-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .cover-filter-area {
   display: flex;
   flex-wrap: wrap;

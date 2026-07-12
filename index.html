@@ -112,10 +112,17 @@
       </div>
 
       <div class="cover-controls">
-        <label class="search-box narrow">
-          <span>歌ってみた検索</span>
-          <input type="search" id="cover-keyword" placeholder="曲名・アーティスト名・動画タイトルなど">
-        </label>
+        <div class="cover-search-row">
+          <label class="search-box narrow">
+            <span>歌ってみた検索</span>
+            <input type="search" id="cover-keyword" placeholder="曲名・アーティスト名・動画タイトルなど">
+          </label>
+          <div class="cover-order-switch" role="group" aria-label="歌ってみたの表示順">
+            <span class="filter-title">表示順</span>
+            <button class="mini-button active" type="button" data-cover-order="newest">新しい順</button>
+            <button class="mini-button" type="button" data-cover-order="oldest">古い順</button>
+          </div>
+        </div>
 
         <div class="cover-filter-area" aria-label="歌ってみた表示条件">
           <div class="inline-filter-group">
