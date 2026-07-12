@@ -146,12 +146,12 @@ h1 {
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin: 1.5rem 0 1rem;
+  margin: 1.25rem 0 0.9rem;
 }
 
 .panel-heading h2 {
   margin: 0;
-  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-size: clamp(1.25rem, 2.4vw, 1.7rem);
 }
 
 .panel-heading p {
