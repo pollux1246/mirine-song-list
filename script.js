@@ -614,7 +614,6 @@ function renderIndexOccurrences(rows) {
       ${sortRows(rows).map((row) => `
         <div class="index-occurrence">
           <span>${escapeHtml(row["日付"])}</span>
-          <span>${escapeHtml(row.format)}</span>
           <span>${escapeHtml(row.detail)}</span>
           ${row["配信タイトル"] ? `<span>${escapeHtml(row["配信タイトル"])}</span>` : ""}
           ${renderListenLink(row, "聴く")}
@@ -998,7 +997,6 @@ function renderArtists() {
                   ${rows.map((row) => `
                     <div class="occurrence">
                       <span>${escapeHtml(row["日付"])}</span>
-                      <span>${escapeHtml(row.format)}</span>
                       <span>${escapeHtml(row.detail)}</span>
                       ${row["配信タイトル"] ? `<span>${escapeHtml(row["配信タイトル"])}</span>` : ""}
                       ${renderListenLink(row, "聴く")}

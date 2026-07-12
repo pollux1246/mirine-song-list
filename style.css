@@ -497,6 +497,11 @@ h1 {
   font-size: 0.84rem;
 }
 
+.occurrence > span:not(:last-of-type)::after {
+  content: " /";
+  color: #b9aeb2;
+}
+
 .empty {
   padding: 2rem;
   border: 1px dashed var(--line);
@@ -886,7 +891,7 @@ h1 {
   line-height: 1.4;
 }
 
-.index-occurrence > span:not(:last-child)::after {
+.index-occurrence > span:not(:last-of-type)::after {
   content: " /";
   color: #b9aeb2;
 }
