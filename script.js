@@ -18,9 +18,9 @@ const state = {
   selectedArtist: "",
   indexMode: "song",
   coverFilters: {
-    full: true,
-    short: true,
-    includeRelated: true,
+    full: false,
+    short: false,
+    includeRelated: false,
   },
 };
 
@@ -312,8 +312,15 @@ function renderFilters() {
   );
   state.selectedDetailKeys.clear();
 
+  const formatLabels = {
+    "Live Stream": "Live Stream / 配信",
+    "Shorts": "Shorts / ショート",
+    "Video": "Video / 動画",
+  };
+
   $("#hierarchical-filters").innerHTML = state.formats.map((format, formatIndex) => {
     const details = state.detailsByFormat.get(format) || [];
+    const formatLabel = formatLabels[format] || format;
     const parentId = `format-parent-${formatIndex}`;
     const children = details.map((detail, detailIndex) => {
       const childId = `format-detail-${formatIndex}-${detailIndex}`;
@@ -330,7 +337,7 @@ function renderFilters() {
         <div class="hierarchy-parent-cell">
           <label class="hierarchy-parent" for="${parentId}">
             <input id="${parentId}" type="checkbox" data-filter-parent value="${escapeHtml(format)}">
-            <span>${escapeHtml(format)}</span>
+            <span>${escapeHtml(formatLabel)}</span>
           </label>
         </div>
         <div class="hierarchy-children-cell">${children}</div>
@@ -445,6 +452,8 @@ function isCoverRow(row) {
 }
 
 function isSelectedCoverKind(row) {
+  const noKindSelected = !state.coverFilters.full && !state.coverFilters.short;
+  if (noKindSelected) return isCoverRow(row);
   if (isFullCoverRow(row)) return state.coverFilters.full;
   if (isShortCoverRow(row)) return state.coverFilters.short;
   return false;
@@ -781,7 +790,7 @@ function renderCovers() {
                   <div class="cover-entry-main">
                     <div class="badge-row">
                       <span class="badge ${isFullCoverRow(row) ? "cover-full-badge" : "cover-short-badge"}">${escapeHtml(coverKindLabel(row))}</span>
-                      ${renderBadgeSpans(row)}
+                      ${row.detail ? `<span class="badge sub">${escapeHtml(row.detail)}</span>` : ""}
                       ${isTarget ? "" : `<span class="badge related-badge">関連表示</span>`}
                     </div>
                     <div class="cover-entry-title">${escapeHtml(row["配信タイトル"] || row["曲名"])}</div>

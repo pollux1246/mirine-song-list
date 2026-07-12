@@ -18,17 +18,17 @@
 
   <main class="container">
     <nav class="tabs" aria-label="表示切替">
-      <button class="tab-button active" type="button" data-tab="list">一覧</button>
-      <button class="tab-button" type="button" data-tab="index">曲名索引</button>
+      <button class="tab-button active" type="button" data-tab="list">一覧表</button>
+      <button class="tab-button" type="button" data-tab="index">曲リスト</button>
       <button class="tab-button" type="button" data-tab="covers">歌ってみた</button>
       <button class="tab-button" type="button" data-tab="streams">歌枠</button>
-      <button class="tab-button" type="button" data-tab="artists">アーティスト別</button>
+      <button class="tab-button" type="button" data-tab="artists">アーティスト</button>
     </nav>
 
     <section class="tab-panel active" id="tab-list">
       <div class="panel-heading">
         <div>
-          <h2>一覧</h2>
+          <h2>一覧表</h2>
           <p>曲名、アーティスト名、配信タイトルなどで検索できます。</p>
         </div>
         <p class="result-count" id="list-count"></p>
@@ -81,8 +81,8 @@
     <section class="tab-panel" id="tab-index">
       <div class="panel-heading">
         <div>
-          <h2>曲名索引</h2>
-          <p>歌ったことのある曲を、曲名順またはアーティスト順で一覧できます。</p>
+          <h2>曲リスト</h2>
+          <p>曲名順・アーティスト順で、歌った曲を見られます。曲名をクリックすると、いつ歌ったか表示します。</p>
         </div>
         <p class="result-count" id="index-count"></p>
       </div>
@@ -105,7 +105,7 @@
       <div class="panel-heading">
         <div>
           <h2>歌ってみた</h2>
-          <p>歌ってみた動画と歌みた系Shortsを、関連元ごとにまとめています。</p>
+          <p>歌ってみた動画と歌Shortsの一覧です。アカペラ版や切り抜き版は、同じ曲ごとにまとめています。</p>
         </div>
         <p class="result-count" id="cover-count"></p>
       </div>
@@ -118,20 +118,20 @@
 
         <div class="cover-filter-area" aria-label="歌ってみた表示条件">
           <div class="inline-filter-group">
-            <div class="filter-title">表示対象</div>
+            <div class="filter-title">表示対象（未選択の場合は全部表示）</div>
             <label class="chip">
-              <input type="checkbox" id="cover-full-filter" checked>
+              <input type="checkbox" id="cover-full-filter">
               <span>歌みたフル</span>
             </label>
             <label class="chip">
-              <input type="checkbox" id="cover-short-filter" checked>
+              <input type="checkbox" id="cover-short-filter">
               <span>歌Short</span>
             </label>
           </div>
 
           <label class="chip related-option">
-            <input type="checkbox" id="cover-related-toggle" checked>
-            <span>関連コンテンツも一緒に表示</span>
+            <input type="checkbox" id="cover-related-toggle">
+            <span>同じ曲の動画も一緒に表示</span>
           </label>
         </div>
       </div>
@@ -143,7 +143,7 @@
       <div class="panel-heading">
         <div>
           <h2>歌枠</h2>
-          <p>Live Streamを配信ごとのカードにまとめています。歌ってみた動画とShortsはここでは除外しています。</p>
+          <p>歌枠ごとに、歌った曲をまとめています。</p>
         </div>
         <p class="result-count" id="stream-count"></p>
       </div>
@@ -159,8 +159,8 @@
     <section class="tab-panel" id="tab-artists">
       <div class="panel-heading">
         <div>
-          <h2>アーティスト別</h2>
-          <p>アーティストごとに、歌唱曲と歌唱回数をまとめています。</p>
+          <h2>アーティスト</h2>
+          <p>アーティストごとに、歌った曲と回数をまとめています。コラボ曲などは、アーティスト名ごとに分けています。<br>例：「40mP feat. 初音ミク」→「40mP」「初音ミク」</p>
         </div>
         <p class="result-count" id="artist-count"></p>
       </div>
