@@ -149,10 +149,17 @@
         <p class="result-count" id="stream-count"></p>
       </div>
 
-      <label class="search-box narrow">
-        <span>歌枠検索</span>
-        <input type="search" id="stream-keyword" placeholder="曲名・配信タイトル・アーティスト名など">
-      </label>
+      <div class="stream-controls">
+        <label class="search-box narrow">
+          <span>歌枠検索</span>
+          <input type="search" id="stream-keyword" placeholder="曲名・配信タイトル・アーティスト名など">
+        </label>
+        <div class="stream-order-switch" role="group" aria-label="歌枠の表示順">
+          <span class="filter-title">表示順</span>
+          <button class="mini-button active" type="button" data-stream-order="newest">新しい順</button>
+          <button class="mini-button" type="button" data-stream-order="oldest">古い順</button>
+        </div>
+      </div>
 
       <div class="card-grid stream-grid" id="stream-cards"></div>
     </section>

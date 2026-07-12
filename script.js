@@ -17,6 +17,7 @@ const state = {
   selectedDetailKeys: new Set(),
   selectedArtist: "",
   indexMode: "song",
+  streamOrder: "newest",
   coverFilters: {
     full: false,
     short: false,
@@ -852,7 +853,10 @@ function renderStreams() {
 
   const groups = [...groupBy(streamRows, (row) => row["動画ID"] || row.URL).entries()]
     .map(([videoId, rows]) => [videoId, rows.sort((a, b) => a.order - b.order)])
-    .sort((a, b) => a[1][0].sortKey.localeCompare(b[1][0].sortKey, "ja"));
+    .sort((a, b) => {
+      const comparison = a[1][0].sortKey.localeCompare(b[1][0].sortKey, "ja");
+      return state.streamOrder === "newest" ? -comparison : comparison;
+    });
 
   $("#stream-count").textContent = `${groups.length}枠 / ${streamRows.length}曲`;
 
@@ -1066,6 +1070,13 @@ function setupEvents() {
     renderCovers();
   });
   $("#stream-keyword").addEventListener("input", renderStreams);
+  $$(`[data-stream-order]`).forEach((button) => {
+    button.addEventListener("click", () => {
+      state.streamOrder = button.dataset.streamOrder;
+      $$(`[data-stream-order]`).forEach((item) => item.classList.toggle("active", item === button));
+      renderStreams();
+    });
+  });
   $("#artist-keyword").addEventListener("input", () => {
     state.selectedArtist = "";
     renderArtists();

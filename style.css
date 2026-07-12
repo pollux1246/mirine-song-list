@@ -950,3 +950,37 @@ h1 {
     padding-left: 1rem;
   }
 }
+
+
+/* 歌枠の表示順 */
+.stream-controls {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stream-controls .search-box.narrow {
+  flex: 1 1 36rem;
+  margin-bottom: 0;
+}
+
+.stream-order-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stream-order-switch .mini-button.active {
+  color: #fff;
+  background: var(--main);
+}
+
+@media (max-width: 720px) {
+  .stream-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
