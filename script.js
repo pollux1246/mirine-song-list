@@ -22,6 +22,7 @@ const state = {
     short: false,
     includeRelated: false,
   },
+  statsAnimated: false,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -254,6 +255,39 @@ function matchesKeyword(row, keyword) {
   return target.includes(keyword.toLowerCase());
 }
 
+function animateStatNumbers() {
+  if (state.statsAnimated) return;
+  state.statsAnimated = true;
+
+  const numberElements = $$("#stats .stat-number");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  numberElements.forEach((element) => {
+    const target = Number(element.dataset.target || 0);
+    element.textContent = prefersReducedMotion ? target.toLocaleString("ja-JP") : "0";
+  });
+
+  if (prefersReducedMotion) return;
+
+  const duration = 900;
+  const startTime = performance.now();
+
+  function update(currentTime) {
+    const progress = Math.min((currentTime - startTime) / duration, 1);
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+    numberElements.forEach((element) => {
+      const target = Number(element.dataset.target || 0);
+      const current = Math.round(target * easedProgress);
+      element.textContent = current.toLocaleString("ja-JP");
+    });
+
+    if (progress < 1) requestAnimationFrame(update);
+  }
+
+  requestAnimationFrame(update);
+}
+
 function renderStats() {
   const rows = state.rows;
   const streamRows = rows.filter((row) => row.format === "Live Stream");
@@ -279,11 +313,13 @@ function renderStats() {
   $("#stats").innerHTML = stats
     .map(([number, label]) => `
       <div class="stat-card">
-        <span class="stat-number">${escapeHtml(number)}</span>
+        <span class="stat-number" data-target="${escapeHtml(number)}">${escapeHtml(number)}</span>
         <span class="stat-label">${escapeHtml(label)}</span>
       </div>
     `)
     .join("");
+
+  animateStatNumbers();
 }
 
 function makeFilterKey(format, detail) {
