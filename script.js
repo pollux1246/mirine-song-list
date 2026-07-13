@@ -290,6 +290,19 @@ function animateStatNumbers() {
   requestAnimationFrame(update);
 }
 
+function renderDataThroughDate() {
+  const latestDate = state.rows
+    .map((row) => String(row["日付"] || "").trim())
+    .filter(Boolean)
+    .sort((a, b) => b.localeCompare(a, "ja"))[0];
+
+  const dateElement = $("#data-through-date");
+  if (!dateElement || !latestDate) return;
+
+  dateElement.textContent = `（${latestDate}分まで収録）`;
+  dateElement.hidden = false;
+}
+
 function renderStats() {
   const rows = state.rows;
   const streamRows = rows.filter((row) => row.format === "Live Stream");
@@ -1128,6 +1141,7 @@ async function init() {
       .filter((row) => row["曲名"] || row["配信タイトル"]);
 
     state.rows = sortRows(rows);
+    renderDataThroughDate();
     renderStats();
     renderFilters();
     renderList();
