@@ -15,7 +15,7 @@ const state = {
   formats: [],
   detailsByFormat: new Map(),
   selectedDetailKeys: new Set(),
-  selectedArtist: "",
+  selectedArtists: new Set(),
   indexMode: "song",
   streamOrder: "newest",
   coverOrder: "newest",
@@ -934,7 +934,7 @@ function renderArtists() {
   const artistGroups = [...artistMap.entries()]
     .map(([artist, group]) => ({ artist, reading: group.reading, rows: group.rows }))
     .filter((group) => {
-      if (state.selectedArtist && group.artist !== state.selectedArtist) return false;
+      if (state.selectedArtists.size && !state.selectedArtists.has(group.artist)) return false;
       if (!keyword) return true;
       const target = [
         group.artist,
@@ -950,15 +950,15 @@ function renderArtists() {
     })
     .sort(compareArtistEntries);
 
-  $("#artist-count").textContent = state.selectedArtist
-    ? `${artistGroups.length}アーティスト / ${state.selectedArtist}で絞り込み中`
+  $("#artist-count").textContent = state.selectedArtists.size
+    ? `${artistGroups.length}アーティスト / ${state.selectedArtists.size}件選択中`
     : `${artistGroups.length}アーティスト`;
 
   const allArtists = getAllArtistNames(state.rows);
   $("#artist-index").innerHTML = `
-    <button type="button" class="artist-index-button ${state.selectedArtist ? "" : "active"}" data-artist-filter="">全アーティスト表示</button>
+    <button type="button" class="artist-index-button ${state.selectedArtists.size ? "" : "active"}" data-artist-filter="">全アーティスト表示</button>
     ${allArtists.map((artist) => `
-      <button type="button" class="artist-index-button ${state.selectedArtist === artist ? "active" : ""}" data-artist-filter="${escapeHtml(artist)}">${escapeHtml(artist)}</button>
+      <button type="button" class="artist-index-button ${state.selectedArtists.has(artist) ? "active" : ""}" data-artist-filter="${escapeHtml(artist)}">${escapeHtml(artist)}</button>
     `).join("")}
   `;
 
@@ -1024,7 +1024,14 @@ function renderArtists() {
 function bindArtistIndexButtons() {
   $$('[data-artist-filter]').forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedArtist = button.dataset.artistFilter || "";
+      const artist = button.dataset.artistFilter || "";
+      if (!artist) {
+        state.selectedArtists.clear();
+      } else if (state.selectedArtists.has(artist)) {
+        state.selectedArtists.delete(artist);
+      } else {
+        state.selectedArtists.add(artist);
+      }
       renderArtists();
       $("#tab-artists").scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -1100,7 +1107,7 @@ function setupEvents() {
     });
   });
   $("#artist-keyword").addEventListener("input", () => {
-    state.selectedArtist = "";
+    state.selectedArtists.clear();
     renderArtists();
   });
 
