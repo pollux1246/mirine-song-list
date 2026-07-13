@@ -1,6 +1,20 @@
 const CSV_FILE = "mirine_list.csv";
 
 const COVER_VIDEO_DETAILS = new Set(["歌ってみた"]);
+const VOCALOID_NAMES = new Set([
+  "初音ミク",
+  "鏡音リン",
+  "鏡音レン",
+  "巡音ルカ",
+  "MEIKO",
+  "KAITO",
+  "GUMI",
+  "IA",
+  "可不",
+  "音街ウナ",
+  "重音テト",
+]);
+
 const COVER_SHORT_DETAILS = new Set([
   "歌みたショート",
   "歌みた切り抜き",
@@ -16,6 +30,8 @@ const state = {
   detailsByFormat: new Map(),
   selectedDetailKeys: new Set(),
   selectedArtists: new Set(),
+  includeVocaloids: true,
+  mergeRelatedRankings: true,
   indexMode: "song",
   streamOrder: "newest",
   coverOrder: "newest",
@@ -322,6 +338,148 @@ function renderStats() {
     .join("");
 
   animateStatNumbers();
+}
+
+
+function compareRankingEntries(a, b) {
+  return b.count - a.count || String(a.label).localeCompare(String(b.label), "ja", {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
+function getRankingEvents() {
+  if (!state.mergeRelatedRankings) {
+    return state.rows.map((row) => ({
+      key: `row:${row["歌唱ID"] || row.sortKey || row.URL}`,
+      rows: [row],
+    }));
+  }
+
+  const rowById = new Map(state.rows.map((row) => [row["歌唱ID"], row]));
+  const eventMap = new Map();
+
+  state.rows.forEach((row) => {
+    const key = isCoverRow(row)
+      ? `cover:${makeCoverGroupId(row, rowById)}`
+      : `row:${row["歌唱ID"] || row.sortKey || row.URL}`;
+
+    if (!eventMap.has(key)) eventMap.set(key, { key, rows: [] });
+    eventMap.get(key).rows.push(row);
+  });
+
+  return [...eventMap.values()];
+}
+
+function renderTopRankings() {
+  const events = getRankingEvents();
+  const rawSongRows = groupBy(state.rows, makeSongKey);
+  const songMap = new Map();
+
+  events.forEach((event) => {
+    const representative = event.rows[0];
+    const key = makeSongKey(representative);
+    if (!songMap.has(key)) {
+      songMap.set(key, {
+        key,
+        label: representative["曲名"] || "曲名未入力",
+        sublabel: representative["アーティスト名"] || "アーティスト名未入力",
+        count: 0,
+        rows: rawSongRows.get(key) || [],
+      });
+    }
+    songMap.get(key).count += 1;
+  });
+
+  const songGroups = [...songMap.values()]
+    .sort(compareRankingEntries)
+    .slice(0, 10);
+
+  const artistMap = new Map();
+  events.forEach((event) => {
+    const eventArtists = new Set();
+    const eventSongKeys = new Set();
+
+    event.rows.forEach((row) => {
+      eventSongKeys.add(makeSongKey(row));
+      getArtistEntries(row).forEach(({ name }) => eventArtists.add(name));
+    });
+
+    eventArtists.forEach((name) => {
+      if (!state.includeVocaloids && VOCALOID_NAMES.has(name)) return;
+      if (!artistMap.has(name)) artistMap.set(name, { count: 0, songKeys: new Set() });
+      const group = artistMap.get(name);
+      group.count += 1;
+      eventSongKeys.forEach((songKey) => group.songKeys.add(songKey));
+    });
+  });
+
+  const artistGroups = [...artistMap.entries()]
+    .map(([artist, group]) => ({
+      label: artist,
+      count: group.count,
+      songCount: group.songKeys.size,
+    }))
+    .sort(compareRankingEntries)
+    .slice(0, 10);
+
+  $("#song-ranking").innerHTML = songGroups.map((item) => `
+    <li class="ranking-item ranking-item-expandable">
+      <button class="ranking-entry-button" type="button" data-ranking-song="${escapeHtml(item.key)}" aria-expanded="false">
+        <span class="ranking-main">
+          <span class="ranking-name">${escapeHtml(item.label)}</span>
+          <span class="ranking-sub">${escapeHtml(item.sublabel)}</span>
+        </span>
+        <span class="ranking-value">${item.count}回</span>
+      </button>
+      <div class="ranking-details" hidden>
+        ${renderIndexOccurrences(item.rows)}
+      </div>
+    </li>
+  `).join("");
+
+  $("#artist-ranking").innerHTML = artistGroups.map((item) => `
+    <li class="ranking-item">
+      <button class="ranking-entry-button ranking-artist-link" type="button" data-ranking-artist="${escapeHtml(item.label)}">
+        <span class="ranking-main">
+          <span class="ranking-name">${escapeHtml(item.label)}</span>
+          <span class="ranking-sub">${item.songCount}曲</span>
+        </span>
+        <span class="ranking-value">${item.count}回</span>
+      </button>
+    </li>
+  `).join("");
+
+  bindRankingInteractions();
+}
+
+function bindRankingInteractions() {
+  $$('[data-ranking-song]').forEach((button) => {
+    button.addEventListener("click", () => {
+      const details = button.nextElementSibling;
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", String(!isOpen));
+      details.hidden = isOpen;
+    });
+  });
+
+  $$('[data-ranking-artist]').forEach((button) => {
+    button.addEventListener("click", () => {
+      const artist = button.dataset.rankingArtist;
+      state.selectedArtists.clear();
+      state.selectedArtists.add(artist);
+      renderArtists();
+      activateTab("artists", { scroll: false });
+      requestAnimationFrame(() => {
+        const card = $(`[data-artist-card="${CSS.escape(artist)}"]`);
+        if (!card) return;
+        const tabs = $(".tabs");
+        const offset = (tabs?.offsetHeight || 0) + 12;
+        const top = card.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      });
+    });
+  });
 }
 
 function makeFilterKey(format, detail) {
@@ -973,7 +1131,7 @@ function renderArtists() {
       .sort((a, b) => a[0].localeCompare(b[0], "ja"));
 
     return `
-      <article class="card artist-card open">
+      <article class="card artist-card open" data-artist-card="${escapeHtml(group.artist)}">
         <div class="card-header" data-artist-toggle>
           <h3 class="card-title">
             <span>${escapeHtml(group.artist)}</span>
@@ -1070,6 +1228,14 @@ function setupTabs() {
 
 function setupEvents() {
   $("#keyword").addEventListener("input", renderList);
+  $("#merge-related-rankings").addEventListener("change", (event) => {
+    state.mergeRelatedRankings = event.target.checked;
+    renderTopRankings();
+  });
+  $("#include-vocaloids").addEventListener("change", (event) => {
+    state.includeVocaloids = event.target.checked;
+    renderTopRankings();
+  });
   $("#index-keyword").addEventListener("input", renderSongIndex);
   $$('[data-index-mode]').forEach((button) => {
     button.addEventListener("click", () => {
@@ -1128,6 +1294,7 @@ async function init() {
 
     state.rows = sortRows(rows);
     renderStats();
+    renderTopRankings();
     renderFilters();
     renderList();
     renderSongIndex();
