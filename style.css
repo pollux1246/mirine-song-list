@@ -646,6 +646,10 @@ h1 {
     align-items: stretch;
     flex-direction: column;
   }
+
+  .cover-search-row .search-box.narrow {
+    flex: none;
+  }
 }
 
 .cover-filter-area {
@@ -1019,5 +1023,9 @@ h1 {
   .stream-controls {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .stream-controls .search-box.narrow {
+    flex: none;
   }
 }
