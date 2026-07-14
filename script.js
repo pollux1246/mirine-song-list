@@ -304,39 +304,7 @@ function renderDataThroughDate() {
   dateElement.hidden = false;
 }
 
-function renderStats() {
-  const rows = state.rows;
-  const streamRows = rows.filter((row) => row.format === "Live Stream");
-  const fullCoverRows = rows.filter(isFullCoverRow);
-  const shortRows = rows.filter((row) => row.format === "Shorts");
 
-  const songCount = countUniqueBy(rows, (row) => {
-    const song = String(row["曲名"] || "").trim();
-    const artist = String(row["アーティスト名"] || "").trim();
-    return song ? `${song}\u0000${artist}` : "";
-  });
-
-  const stats = [
-    [rows.length, "歌唱データ件数"],
-    [songCount, "曲"],
-    [countUnique(rows, "アーティスト名"), "アーティスト"],
-    [countUnique(streamRows, "動画ID"), "歌枠"],
-    [streamRows.length, "歌枠歌唱数"],
-    [fullCoverRows.length, "歌ってみた（フル）"],
-    [shortRows.length, "Shorts"],
-  ];
-
-  $("#stats").innerHTML = stats
-    .map(([number, label]) => `
-      <div class="stat-card">
-        <span class="stat-number" data-target="${escapeHtml(number)}">${escapeHtml(number)}</span>
-        <span class="stat-label">${escapeHtml(label)}</span>
-      </div>
-    `)
-    .join("");
-
-  animateStatNumbers();
-}
 
 
 function makeFilterKey(format, detail) {
@@ -1169,7 +1137,7 @@ async function init() {
 
     state.rows = sortRows(rows);
     renderDataThroughDate();
-    renderStats();
+
     renderFilters();
     renderList();
     renderSongIndex();

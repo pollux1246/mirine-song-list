@@ -67,35 +67,6 @@ h1 {
   font-size: 1.05rem;
 }
 
-.stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-}
-
-.stat-card {
-  min-width: 8.5rem;
-  padding: 0.8rem 1rem;
-  border: 1px solid rgba(182, 86, 106, 0.18);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 8px 22px rgba(102, 58, 70, 0.07);
-  backdrop-filter: blur(8px);
-}
-
-.stat-number {
-  display: block;
-  color: var(--main-dark);
-  font-size: 1.55rem;
-  font-weight: 900;
-}
-
-.stat-label {
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
 .tabs {
   position: sticky;
   top: 0;
