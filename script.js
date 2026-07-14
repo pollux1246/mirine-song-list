@@ -915,17 +915,22 @@ function renderStreams() {
     return `
       <article class="card stream-card" id="stream-${escapeHtml(videoId)}">
         <div class="card-header">
-          <div class="card-meta">
-            <span>${escapeHtml(first["日付"])}</span>
-            ${additionalMeta.map((item) => `<span>／ ${escapeHtml(item)}</span>`).join("")}
-          </div>
-          <h3 class="card-title">${escapeHtml(title)}</h3>
-          <div class="badge-row">
+          <div class="badge-row stream-header-info">
+            <span class="stream-header-date">${escapeHtml(first["日付"])}</span>
             <span class="badge sub">${escapeHtml(first.detail)}</span>
             ${commonFeatureTags
               .map((tag) => `<span class="feature-tag">${escapeHtml(tag)}</span>`)
               .join("")}
           </div>
+          <h3 class="card-title">${escapeHtml(title)}</h3>
+          ${additionalMeta.length ? `
+            <div class="card-meta stream-additional-meta">
+              ${additionalMeta.map((item, index) => `
+                ${index ? `<span>／</span>` : ""}
+                <span>${escapeHtml(item)}</span>
+              `).join("")}
+            </div>
+          ` : ""}
         </div>
         <div class="card-body">
           <ul class="track-list">
