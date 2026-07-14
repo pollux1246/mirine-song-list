@@ -233,6 +233,47 @@ h1 {
   justify-content: flex-end;
 }
 
+.top-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.filter-disclosure {
+  border-top: 1px solid var(--line);
+  padding-top: 0.85rem;
+}
+
+.filter-disclosure summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  width: fit-content;
+  color: var(--main-dark);
+  cursor: pointer;
+  list-style: none;
+}
+
+.filter-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-disclosure summary::before {
+  content: "▶";
+  font-size: 0.72rem;
+  transition: transform 0.18s ease;
+}
+
+.filter-disclosure[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.filter-disclosure .hierarchical-filter-block {
+  margin-top: 0.75rem;
+}
+
+
 .mini-button {
   padding: 0.65rem 0.9rem;
   color: var(--main-dark);
@@ -486,6 +527,22 @@ h1 {
   padding: 2rem 0 3rem;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .top-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    justify-content: flex-start;
+  }
+
+  .filter-disclosure summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
 }
 
 @media (max-width: 720px) {

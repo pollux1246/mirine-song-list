@@ -35,24 +35,25 @@
       </div>
 
       <div class="controls">
-        <label class="search-box">
-          <span>キーワード検索</span>
-          <input type="search" id="keyword" placeholder="曲名・アーティスト名・配信タイトルなど">
-        </label>
-
-        <div class="filter-block hierarchical-filter-block">
-          <div class="filter-title-row">
-            <div>
-              <div class="filter-title">形式・詳細区分</div>
-              <p class="filter-help">未選択時はすべて表示</p>
-            </div>
+        <div class="top-search-row">
+          <label class="search-box">
+            <span>キーワード検索</span>
+            <input type="search" id="keyword" placeholder="曲名・アーティスト名・配信タイトルなど">
+          </label>
+          <div class="filter-actions">
+            <button class="mini-button" type="button" id="reset-filters">フィルタ解除</button>
           </div>
-          <div class="hierarchical-filters" id="hierarchical-filters"></div>
         </div>
 
-        <div class="filter-actions">
-          <button class="mini-button" type="button" id="reset-filters">フィルタ解除</button>
-        </div>
+        <details class="filter-disclosure">
+          <summary>
+            <span class="filter-title">形式・詳細区分</span>
+            <span class="filter-help">未選択時はすべて表示</span>
+          </summary>
+          <div class="filter-block hierarchical-filter-block">
+            <div class="hierarchical-filters" id="hierarchical-filters"></div>
+          </div>
+        </details>
       </div>
 
       <div class="table-wrap">
