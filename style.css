@@ -551,14 +551,25 @@ h1 {
   }
 
   .tabs {
+    justify-content: flex-start;
     gap: 0.35rem;
     padding: 0.45rem;
     border-radius: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .tab-button {
-    padding: 0.65rem 0.45rem;
+    flex: 0 0 auto;
+    padding: 0.65rem 0.9rem;
     font-size: 0.92rem;
+    white-space: nowrap;
   }
 
   .panel-heading {
