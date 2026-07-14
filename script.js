@@ -436,7 +436,7 @@ function renderList() {
   $("#list-count").textContent = `${rows.length}件表示`;
 
   if (!rows.length) {
-    $("#song-table-body").innerHTML = `<tr><td colspan="11"><div class="empty">条件に合う歌唱がありません。</div></td></tr>`;
+    $("#song-table-body").innerHTML = `<tr><td colspan="10"><div class="empty">条件に合う歌唱がありません。</div></td></tr>`;
     return;
   }
 
@@ -446,16 +446,15 @@ function renderList() {
       <td>${escapeHtml(row["日付"])}</td>
       <td>${escapeHtml(row.format)}</td>
       <td>${escapeHtml(row.detail)}</td>
-      <td><span class="song-title">${escapeHtml(row["曲名"])}</span></td>
+      <td>
+        <span class="song-title">${escapeHtml(row["曲名"])}</span>
+        ${row["備考"] ? `<span class="subtext">${escapeHtml(row["備考"])}</span>` : ""}
+      </td>
       <td>${escapeHtml(row["アーティスト名"])}</td>
       <td>${escapeHtml(row["コラボ"]) || ""}</td>
       <td>${escapeHtml(row.channel) || ""}</td>
-      <td>
-        ${escapeHtml(row["配信タイトル"])}
-        ${row["関連元"] ? `<span class="subtext">関連元: ${escapeHtml(row["関連元"])}</span>` : ""}
-      </td>
+      <td>${escapeHtml(row["配信タイトル"])}</td>
       <td>${renderListenLink(row)}</td>
-      <td>${escapeHtml(row["備考"])}</td>
     </tr>
   `).join("");
 }
