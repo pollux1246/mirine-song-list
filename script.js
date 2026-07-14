@@ -497,7 +497,7 @@ function isFullCoverRow(row) {
 }
 
 function isShortCoverRow(row) {
-  return row.format === "Shorts" && COVER_SHORT_DETAILS.has(row.detail);
+  return row.format === "Shorts";
 }
 
 function isCoverRow(row) {
@@ -867,7 +867,7 @@ function renderCovers() {
                     <div class="badge-row cover-entry-info">
                       <span class="cover-entry-date">${escapeHtml(row["日付"])}</span>
                       <span class="badge ${isFullCoverRow(row) ? "cover-full-badge" : "cover-short-badge"}">${escapeHtml(coverKindLabel(row))}</span>
-                      ${row.detail ? `<span class="badge sub">${escapeHtml(row.detail)}</span>` : ""}
+                      ${isFullCoverRow(row) || !row.detail ? "" : `<span class="badge sub">${escapeHtml(row.detail)}</span>`}
                       ${isTarget ? "" : `<span class="badge related-badge">関連表示</span>`}
                     </div>
                     <div class="cover-entry-title">${escapeHtml(row["配信タイトル"] || row["曲名"])}</div>

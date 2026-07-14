@@ -1089,3 +1089,19 @@ h1 {
   margin-top: 1.25rem;
 }
 
+
+
+.stream-header-info {
+  align-items: center;
+}
+
+.stream-header-date {
+  color: var(--muted);
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.stream-additional-meta {
+  flex-wrap: wrap;
+}
+
