@@ -17,6 +17,7 @@ const state = {
   selectedDetailKeys: new Set(),
   selectedArtists: new Set(),
   indexMode: "song",
+  showIndexTypeIcons: false,
   streamOrder: "newest",
   coverOrder: "newest",
   coverFilters: {
@@ -637,6 +638,25 @@ function renderIndexOccurrences(rows) {
   `;
 }
 
+function renderIndexTypeIcons(rows) {
+  if (!state.showIndexTypeIcons) return "";
+
+  const icons = rows.map((row) => {
+    if (row.format === "Live Stream") {
+      return '<span class="index-type-icon" title="歌枠・配信" aria-label="歌枠・配信">🎤</span>';
+    }
+    if (row.format === "Video") {
+      return '<span class="index-type-icon" title="歌ってみた動画" aria-label="歌ってみた動画">🎬</span>';
+    }
+    if (row.format === "Shorts") {
+      return '<span class="index-type-icon" title="Shorts" aria-label="Shorts">📱</span>';
+    }
+    return '<span class="index-type-icon" title="その他" aria-label="その他">♪</span>';
+  }).join("");
+
+  return `<span class="index-type-icons">${icons}</span>`;
+}
+
 function renderIndexSongMode(rows) {
   const songGroups = [...groupBy(rows, makeSongKey).entries()]
     .map(([key, groupRows]) => ({
@@ -664,7 +684,7 @@ function renderIndexSongMode(rows) {
                     <span class="index-separator"> / </span>
                     <span class="index-artist-credit">${escapeHtml(group.artist)}</span>
                   </span>
-                  <span class="index-entry-count">${group.rows.length}回</span>
+                  ${renderIndexTypeIcons(group.rows)}
                 </button>
                 <div class="index-entry-details" hidden>
                   ${renderIndexOccurrences(group.rows)}
@@ -720,7 +740,7 @@ function renderIndexArtistMode(rows) {
                     <span class="index-separator"> / </span>
                     <span class="index-artist-credit">${escapeHtml(song.originalArtist)}</span>
                   </span>
-                  <span class="index-entry-count">${song.rows.length}回</span>
+                  ${renderIndexTypeIcons(song.rows)}
                 </button>
                 <div class="index-entry-details" hidden>
                   ${renderIndexOccurrences(song.rows)}
@@ -827,35 +847,30 @@ function renderCovers() {
   $("#cover-cards").innerHTML = groups.map(({ groupId, rows, representative, hasFullCover, targetIdSet }) => {
     const title = representative["曲名"] || rows[0]["曲名"] || "曲名未入力";
     const artist = representative["アーティスト名"] || rows[0]["アーティスト名"] || "";
-    const countText = rows.length === 1 ? "1本" : `${rows.length}本`;
     const cardClass = hasFullCover ? "has-full-cover" : "short-only-cover";
-    const groupLabel = hasFullCover ? "フル歌みたあり" : "Shortsのみ";
 
     return `
       <article class="card cover-card ${cardClass}" id="cover-${escapeHtml(groupId)}">
         <div class="card-header">
-          <div class="card-meta">
-            <span class="cover-group-label">${escapeHtml(groupLabel)}</span>
-            <span>${escapeHtml(countText)}</span>
-            ${artist ? `<span>／</span><span>${escapeHtml(artist)}</span>` : ""}
-          </div>
-          <h3 class="card-title">${escapeHtml(title)}</h3>
+          <h3 class="card-title cover-card-title">
+            <span>${escapeHtml(title)}</span>
+            ${artist ? `<span class="cover-card-artist">／ ${escapeHtml(artist)}</span>` : ""}
+          </h3>
         </div>
         <div class="card-body">
           <div class="cover-entry-list">
             ${rows.map((row) => {
               const isTarget = targetIdSet.has(row["歌唱ID"]);
-              const meta = [row["日付"], row.detail, row["コラボ"] ? `コラボ: ${row["コラボ"]}` : "", row.channel ? `掲載ch: ${row.channel}` : ""].filter(Boolean);
               return `
                 <div class="cover-entry ${isTarget ? "" : "related-entry"}">
                   <div class="cover-entry-main">
-                    <div class="badge-row">
+                    <div class="badge-row cover-entry-info">
+                      <span class="cover-entry-date">${escapeHtml(row["日付"])}</span>
                       <span class="badge ${isFullCoverRow(row) ? "cover-full-badge" : "cover-short-badge"}">${escapeHtml(coverKindLabel(row))}</span>
                       ${row.detail ? `<span class="badge sub">${escapeHtml(row.detail)}</span>` : ""}
                       ${isTarget ? "" : `<span class="badge related-badge">関連表示</span>`}
                     </div>
                     <div class="cover-entry-title">${escapeHtml(row["配信タイトル"] || row["曲名"])}</div>
-                    <div class="card-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("<span>／</span>")}</div>
                     ${row["備考"] ? `<span class="subtext">${escapeHtml(row["備考"])}</span>` : ""}
                   </div>
                   ${renderListenLink(row)}
@@ -905,8 +920,12 @@ function renderStreams() {
             ${additionalMeta.map((item) => `<span>／ ${escapeHtml(item)}</span>`).join("")}
           </div>
           <h3 class="card-title">${escapeHtml(title)}</h3>
-          <div class="badge-row"><span class="badge sub">${escapeHtml(first.detail)}</span></div>
-          ${renderFeatureTags(commonFeatureTags, "stream-feature-tags")}
+          <div class="badge-row">
+            <span class="badge sub">${escapeHtml(first.detail)}</span>
+            ${commonFeatureTags
+              .map((tag) => `<span class="feature-tag">${escapeHtml(tag)}</span>`)
+              .join("")}
+          </div>
         </div>
         <div class="card-body">
           <ul class="track-list">
@@ -991,7 +1010,7 @@ function renderArtists() {
         <div class="card-header" data-artist-toggle>
           <h3 class="card-title">
             <span>${escapeHtml(group.artist)}</span>
-            <span class="artist-counts">${songGroups.length}曲 / ${group.rows.length}回</span>
+            <span class="artist-counts">${songGroups.length}曲</span>
           </h3>
         </div>
         <div class="card-body artist-details">
@@ -1005,7 +1024,6 @@ function renderArtists() {
                 <div class="artist-song-heading">
                   <span class="song-title">${escapeHtml(songName)}</span>
                   <span class="original-artist-name">${escapeHtml(originalArtistNames.join(" ／ ") || "アーティスト名未入力")}</span>
-                  <span class="song-count-muted">${rows.length}回歌唱</span>
                 </div>
                 <div class="song-occurrences">
                   ${rows.map((row) => `
@@ -1091,6 +1109,10 @@ function setupEvents() {
       $$('[data-index-mode]').forEach((item) => item.classList.toggle("active", item === button));
       renderSongIndex();
     });
+  });
+  $("#index-type-icons-toggle").addEventListener("change", (event) => {
+    state.showIndexTypeIcons = event.target.checked;
+    renderSongIndex();
   });
   $("#cover-keyword").addEventListener("input", renderCovers);
   $("#cover-full-filter").addEventListener("change", (event) => {

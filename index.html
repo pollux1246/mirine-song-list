@@ -11,7 +11,7 @@
     <div class="header-inner">
       <p class="eyebrow">Mirine Singing List</p>
       <h1>汐鳴みりね 🧂🎀 歌唱リスト</h1>
-      <p class="lead">歌ってみた、Shorts、歌枠・配信内歌唱をまとめた非公式ファンリストです。<span id="data-through-date" hidden></span></p>
+      <p class="lead">歌ってみた、Shorts、歌枠・配信内歌唱をまとめた非公式ファンリストです。</p>
     </div>
   </header>
 
@@ -93,9 +93,15 @@
           <span>索引検索</span>
           <input type="search" id="index-keyword" placeholder="曲名・アーティスト名で検索">
         </label>
-        <div class="index-mode-switch" role="group" aria-label="索引表示順">
-          <button class="mini-button active" type="button" data-index-mode="song">曲名順</button>
-          <button class="mini-button" type="button" data-index-mode="artist">アーティスト順</button>
+        <div class="index-display-options">
+          <div class="index-mode-switch" role="group" aria-label="索引表示順">
+            <button class="mini-button active" type="button" data-index-mode="song">曲名順</button>
+            <button class="mini-button" type="button" data-index-mode="artist">アーティスト順</button>
+          </div>
+          <label class="chip index-icon-toggle">
+            <input type="checkbox" id="index-type-icons-toggle">
+            <span>種類アイコンを表示</span>
+          </label>
         </div>
       </div>
 

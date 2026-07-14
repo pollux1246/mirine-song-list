@@ -554,6 +554,20 @@ h1 {
 }
 
 
+
+.cover-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.cover-card-artist {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .cover-entry-list {
   display: grid;
   gap: 0.7rem;
@@ -572,6 +586,16 @@ h1 {
 .cover-entry-main {
   display: grid;
   gap: 0.35rem;
+}
+
+.cover-entry-info {
+  align-items: center;
+}
+
+.cover-entry-date {
+  color: var(--muted);
+  font-size: 0.86rem;
+  white-space: nowrap;
 }
 
 .cover-entry-title {
@@ -786,10 +810,22 @@ h1 {
   margin-bottom: 20px;
 }
 
+.index-display-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .index-mode-switch {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.index-icon-toggle {
+  font-size: 0.82rem;
 }
 
 .index-mode-switch .mini-button.active {
@@ -876,6 +912,21 @@ h1 {
   white-space: nowrap;
 }
 
+.index-type-icons {
+  flex: 0 0 auto;
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 0.14rem;
+  max-width: 42%;
+  flex-wrap: wrap;
+  line-height: 1;
+}
+
+.index-type-icon {
+  display: inline-block;
+  font-size: 0.92rem;
+}
+
 .index-entry-details {
   padding: 0 4px 9px 18px;
 }
@@ -908,6 +959,11 @@ h1 {
   .index-controls {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .index-display-options {
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .song-index {
