@@ -884,6 +884,7 @@ h1 {
   background: transparent;
   border: 0;
   cursor: pointer;
+  font: inherit;
 }
 
 .index-entry-button:hover {
