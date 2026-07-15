@@ -11,7 +11,7 @@
     <div class="header-inner">
       <p class="eyebrow">Mirine Singing List</p>
       <h1>汐鳴みりね 🧂🎀 歌唱リスト</h1>
-      <p class="lead">歌ってみた、Shorts、歌枠・配信内歌唱をまとめた非公式ファンリストです。<span id="data-through-date" hidden></span></p>
+      <p class="lead">歌ってみた、Shorts、歌枠をまとめた非公式サイトです。<span id="data-through-date" hidden></span></p>
     </div>
   </header>
 
@@ -28,7 +28,7 @@
 
       <div class="panel-heading top-list-heading">
         <div>
-          <h2>全データ一覧</h2>
+          <h2>登録データ一覧</h2>
           <p>曲名、アーティスト名、配信タイトルなどで検索できます。</p>
         </div>
         <p class="result-count" id="list-count"></p>
@@ -82,7 +82,7 @@
       <div class="panel-heading">
         <div>
           <h2>曲名</h2>
-          <p>曲名順・アーティスト順で、歌った曲を見られます。曲名をクリックすると、いつ歌ったか表示します。</p>
+          <p>曲名順・アーティスト順で、歌った曲をまとめています。曲名をクリックすると詳細を表示します。</p>
         </div>
         <p class="result-count" id="index-count"></p>
       </div>
@@ -111,7 +111,7 @@
       <div class="panel-heading">
         <div>
           <h2>歌ってみた</h2>
-          <p>歌ってみた動画と歌Shortsの一覧です。アカペラ版や切り抜き版は、同じ曲ごとにまとめています。</p>
+          <p>歌ってみた動画と歌Shortsの一覧です。アカペラ版や切り抜き版は、曲ごとにまとめています。</p>
         </div>
         <p class="result-count" id="cover-count"></p>
       </div>
@@ -123,7 +123,6 @@
             <input type="search" id="cover-keyword" placeholder="曲名・アーティスト名・動画タイトルなど">
           </label>
           <div class="cover-order-switch" role="group" aria-label="歌ってみたの表示順">
-            <span class="filter-title">表示順</span>
             <button class="mini-button active" type="button" data-cover-order="newest">新しい順</button>
             <button class="mini-button" type="button" data-cover-order="oldest">古い順</button>
           </div>
@@ -156,7 +155,7 @@
       <div class="panel-heading">
         <div>
           <h2>歌枠</h2>
-          <p>歌枠ごとに、歌った曲をまとめています。</p>
+          <p>歌枠ごとに、歌った曲をまとめています。初配信などで歌った曲も含みます。</p>
         </div>
         <p class="result-count" id="stream-count"></p>
       </div>
@@ -196,10 +195,8 @@
   </main>
 
   <footer class="site-footer">
-    <p>このページは みりんちゅ(リスナー) による非公式の歌唱リストです。</p>
     <p>
-      作成・管理：
-      <a href="https://x.com/pollux1246" target="_blank" rel="noopener noreferrer">@pollux1246</a>
+      <a class="footer-account" href="https://x.com/pollux1246" target="_blank" rel="noopener noreferrer">@pollux1246</a>
     </p>
   </footer>
 
