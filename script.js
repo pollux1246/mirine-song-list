@@ -300,7 +300,7 @@ function renderDataThroughDate() {
   const dateElement = $("#data-through-date");
   if (!dateElement || !latestDate) return;
 
-  dateElement.textContent = `（最新データ：${latestDate}）`;
+  dateElement.textContent = latestDate;
   dateElement.hidden = false;
 }
 

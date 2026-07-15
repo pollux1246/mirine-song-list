@@ -1159,3 +1159,39 @@ h1 {
   flex-wrap: wrap;
 }
 
+/* ヘッダー説明文 */
+.lead-text-mobile {
+  display: none;
+}
+
+#data-through-date::before {
+  content: "（最新データ：";
+}
+
+#data-through-date::after {
+  content: "）";
+}
+
+@media (max-width: 720px) {
+  .lead-text-desktop {
+    display: none;
+  }
+
+  .lead-text-mobile,
+  #data-through-date {
+    display: block;
+  }
+
+  #data-through-date {
+    margin-top: 0.2rem;
+    font-size: 0.9em;
+  }
+
+  #data-through-date::before {
+    content: "最新データ：";
+  }
+
+  #data-through-date::after {
+    content: "";
+  }
+}
