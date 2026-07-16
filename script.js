@@ -1,14 +1,6 @@
 const CSV_FILE = "mirine_list.csv";
 
 const COVER_VIDEO_DETAILS = new Set(["歌ってみた"]);
-const COVER_SHORT_DETAILS = new Set([
-  "歌みたショート",
-  "歌みた切り抜き",
-  "アカペラ版",
-  "アカペラ",
-  "新作ショート",
-]);
-
 const state = {
   rows: [],
   filteredRows: [],
