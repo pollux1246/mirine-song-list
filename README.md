@@ -12,6 +12,7 @@ https://pollux1246.github.io/mirine-song-list/
 - `script.js`：CSVの読み込みと表示処理
 - `mirine_list.csv`：歌唱データ
   - `曲リンク`列は、管理用スプレッドシート上でリンクを表示するための列です。サイトでは使用していません。
+- `favicon.ico`：ブラウザのタブやブックマークに表示するアイコン
 
 ## ライセンス
 
