@@ -1112,7 +1112,6 @@ function setupEvents() {
   });
 
   $("#reset-filters").addEventListener("click", () => {
-    $("#keyword").value = "";
     clearHierarchicalFilters();
   });
 }

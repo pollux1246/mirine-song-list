@@ -1203,3 +1203,33 @@ h1 {
     content: "";
   }
 }
+
+/* しぼりこみ検索 */
+.filter-disclosure-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.filter-disclosure-footer .filter-help {
+  margin: 0;
+}
+
+/* 曲名タブの検索欄 */
+.index-controls .search-box.narrow {
+  flex: 1 1 36rem;
+  margin-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .filter-disclosure-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .index-controls .search-box.narrow {
+    flex: none;
+  }
+}

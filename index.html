@@ -45,18 +45,18 @@
             <span>キーワード検索</span>
             <input type="search" id="keyword" placeholder="曲名・アーティスト名・配信タイトルなど">
           </label>
-          <div class="filter-actions">
-            <button class="mini-button" type="button" id="reset-filters">フィルタ解除</button>
-          </div>
         </div>
 
         <details class="filter-disclosure">
           <summary>
-            <span class="filter-title">形式・詳細区分</span>
-            <span class="filter-help">未選択時はすべて表示</span>
+            <span class="filter-title">しぼりこみ検索</span>
           </summary>
           <div class="filter-block hierarchical-filter-block">
             <div class="hierarchical-filters" id="hierarchical-filters"></div>
+            <div class="filter-disclosure-footer">
+              <span class="filter-help">未選択時はすべて表示</span>
+              <button class="mini-button" type="button" id="reset-filters">しぼりこみを解除</button>
+            </div>
           </div>
         </details>
       </div>
