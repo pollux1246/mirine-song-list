@@ -67,6 +67,16 @@ h1 {
   font-size: 1.05rem;
 }
 
+.header-profile-link {
+  color: var(--main-dark);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.header-profile-link:hover {
+  color: var(--main);
+}
+
 .tabs {
   position: sticky;
   top: 0;
