@@ -896,8 +896,14 @@ h1 {
 }
 
 .song-index {
-  columns: 2 360px;
-  column-gap: 28px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  align-items: start;
+}
+
+.song-index-column {
+  min-width: 0;
 }
 
 .index-section {
@@ -976,7 +982,7 @@ h1 {
 
 .index-type-icons {
   flex: 0 0 auto;
-  display: inline-flex;
+  display: none;
   justify-content: flex-end;
   gap: 0.14rem;
   max-width: 42%;
@@ -987,6 +993,10 @@ h1 {
 .index-type-icon {
   display: inline-block;
   font-size: 0.92rem;
+}
+
+.song-index.show-index-type-icons .index-type-icons {
+  display: inline-flex;
 }
 
 .index-entry-details {
@@ -1029,7 +1039,8 @@ h1 {
   }
 
   .song-index {
-    columns: 1;
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 
   .index-entry-button {

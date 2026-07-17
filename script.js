@@ -598,8 +598,6 @@ function renderIndexOccurrences(rows) {
 }
 
 function renderIndexTypeIcons(rows) {
-  if (!state.showIndexTypeIcons) return "";
-
   const icons = rows.map((row) => {
     if (row.format === "Live Stream") {
       return '<span class="index-type-icon" title="歌枠・配信" aria-label="歌枠・配信">🎤</span>';
@@ -616,6 +614,40 @@ function renderIndexTypeIcons(rows) {
   return `<span class="index-type-icons">${icons}</span>`;
 }
 
+function splitIndexItemsIntoColumns(items, weightFn) {
+  if (items.length <= 1) return [items, []];
+
+  const weights = items.map((item) => Math.max(1, Number(weightFn(item)) || 1));
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  const targetWeight = totalWeight / 2;
+  let runningWeight = 0;
+  let bestSplitIndex = 1;
+  let bestDifference = Infinity;
+
+  for (let index = 1; index < items.length; index += 1) {
+    runningWeight += weights[index - 1];
+    const difference = Math.abs(targetWeight - runningWeight);
+    if (difference < bestDifference) {
+      bestDifference = difference;
+      bestSplitIndex = index;
+    }
+  }
+
+  return [items.slice(0, bestSplitIndex), items.slice(bestSplitIndex)];
+}
+
+function renderIndexColumns(items, renderItem, weightFn) {
+  const [leftItems, rightItems] = splitIndexItemsIntoColumns(items, weightFn);
+  return `
+    <div class="song-index-column">
+      ${leftItems.map(renderItem).join("")}
+    </div>
+    <div class="song-index-column">
+      ${rightItems.map(renderItem).join("")}
+    </div>
+  `;
+}
+
 function renderIndexSongMode(rows) {
   const songGroups = [...groupBy(rows, makeSongKey).entries()]
     .map(([key, groupRows]) => ({
@@ -627,33 +659,39 @@ function renderIndexSongMode(rows) {
     .sort(compareSongIndexEntries);
 
   const sections = groupBy(songGroups, (group) => getIndexSection(group.rows[0]));
-  return INDEX_SECTION_ORDER
+  const sectionItems = INDEX_SECTION_ORDER
     .filter((sectionName) => sections.has(sectionName))
-    .map((sectionName) => {
-      const groups = sections.get(sectionName);
-      return `
-        <section class="index-section">
-          <h3 class="index-section-title">${escapeHtml(sectionName)}</h3>
-          <ul class="dense-index-list">
-            ${groups.map((group) => `
-              <li class="dense-index-item">
-                <button class="index-entry-button" type="button" aria-expanded="false">
-                  <span class="index-entry-main">
-                    <span class="song-title">${escapeHtml(group.song)}</span>
-                    <span class="index-separator"> / </span>
-                    <span class="index-artist-credit">${escapeHtml(group.artist)}</span>
-                  </span>
-                  ${renderIndexTypeIcons(group.rows)}
-                </button>
-                <div class="index-entry-details" hidden>
-                  ${renderIndexOccurrences(group.rows)}
-                </div>
-              </li>
-            `).join("")}
-          </ul>
-        </section>
-      `;
-    }).join("");
+    .map((sectionName) => ({
+      sectionName,
+      groups: sections.get(sectionName),
+    }));
+
+  return renderIndexColumns(
+    sectionItems,
+    ({ sectionName, groups }) => `
+      <section class="index-section">
+        <h3 class="index-section-title">${escapeHtml(sectionName)}</h3>
+        <ul class="dense-index-list">
+          ${groups.map((group) => `
+            <li class="dense-index-item">
+              <button class="index-entry-button" type="button" aria-expanded="false">
+                <span class="index-entry-main">
+                  <span class="song-title">${escapeHtml(group.song)}</span>
+                  <span class="index-separator"> / </span>
+                  <span class="index-artist-credit">${escapeHtml(group.artist)}</span>
+                </span>
+                ${renderIndexTypeIcons(group.rows)}
+              </button>
+              <div class="index-entry-details" hidden>
+                ${renderIndexOccurrences(group.rows)}
+              </div>
+            </li>
+          `).join("")}
+        </ul>
+      </section>
+    `,
+    (item) => item.groups.length
+  );
 }
 
 function renderIndexArtistMode(rows) {
@@ -667,7 +705,7 @@ function renderIndexArtistMode(rows) {
     });
   });
 
-  return [...artistMap.entries()]
+  const artistItems = [...artistMap.entries()]
     .map(([artist, group]) => ({ artist, reading: group.reading, artistRows: group.rows }))
     .sort(compareArtistEntries)
     .map(({ artist, artistRows }) => {
@@ -687,29 +725,35 @@ function renderIndexArtistMode(rows) {
           return readingCompare || a.song.localeCompare(b.song, "ja");
         });
 
-      return `
-        <section class="index-section artist-index-section">
-          <h3 class="index-section-title">${escapeHtml(artist)}</h3>
-          <ul class="dense-index-list">
-            ${songs.map((song) => `
-              <li class="dense-index-item">
-                <button class="index-entry-button" type="button" aria-expanded="false">
-                  <span class="index-entry-main">
-                    <span class="song-title">${escapeHtml(song.song)}</span>
-                    <span class="index-separator"> / </span>
-                    <span class="index-artist-credit">${escapeHtml(song.originalArtist)}</span>
-                  </span>
-                  ${renderIndexTypeIcons(song.rows)}
-                </button>
-                <div class="index-entry-details" hidden>
-                  ${renderIndexOccurrences(song.rows)}
-                </div>
-              </li>
-            `).join("")}
-          </ul>
-        </section>
-      `;
-    }).join("");
+      return { artist, songs };
+    });
+
+  return renderIndexColumns(
+    artistItems,
+    ({ artist, songs }) => `
+      <section class="index-section artist-index-section">
+        <h3 class="index-section-title">${escapeHtml(artist)}</h3>
+        <ul class="dense-index-list">
+          ${songs.map((song) => `
+            <li class="dense-index-item">
+              <button class="index-entry-button" type="button" aria-expanded="false">
+                <span class="index-entry-main">
+                  <span class="song-title">${escapeHtml(song.song)}</span>
+                  <span class="index-separator"> / </span>
+                  <span class="index-artist-credit">${escapeHtml(song.originalArtist)}</span>
+                </span>
+                ${renderIndexTypeIcons(song.rows)}
+              </button>
+              <div class="index-entry-details" hidden>
+                ${renderIndexOccurrences(song.rows)}
+              </div>
+            </li>
+          `).join("")}
+        </ul>
+      </section>
+    `,
+    (item) => item.songs.length
+  );
 }
 
 function bindIndexEntries() {
@@ -744,9 +788,11 @@ function renderSongIndex() {
     return;
   }
 
-  $("#song-index").innerHTML = state.indexMode === "artist"
+  const songIndex = $("#song-index");
+  songIndex.innerHTML = state.indexMode === "artist"
     ? renderIndexArtistMode(rows)
     : renderIndexSongMode(rows);
+  songIndex.classList.toggle("show-index-type-icons", state.showIndexTypeIcons);
   bindIndexEntries();
 }
 
@@ -1076,7 +1122,7 @@ function setupEvents() {
   });
   $("#index-type-icons-toggle").addEventListener("change", (event) => {
     state.showIndexTypeIcons = event.target.checked;
-    renderSongIndex();
+    $("#song-index").classList.toggle("show-index-type-icons", state.showIndexTypeIcons);
   });
   $("#cover-keyword").addEventListener("input", renderCovers);
   $("#cover-full-filter").addEventListener("change", (event) => {
