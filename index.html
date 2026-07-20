@@ -127,9 +127,19 @@
             <span>歌ってみた検索</span>
             <input type="search" id="cover-keyword" placeholder="曲名・アーティスト名・動画タイトルなど">
           </label>
-          <div class="cover-order-switch" role="group" aria-label="歌ってみたの表示順">
-            <button class="mini-button active" type="button" data-cover-order="newest">新しい順</button>
-            <button class="mini-button" type="button" data-cover-order="oldest">古い順</button>
+          <div class="cover-sort-controls">
+            <div class="cover-order-switch" role="group" aria-label="歌ってみたの表示順">
+              <button class="mini-button active" type="button" data-cover-order="newest">新しい順</button>
+              <button class="mini-button" type="button" data-cover-order="oldest">古い順</button>
+            </div>
+            <label class="cover-date-basis">
+              <span>同じ曲は</span>
+              <select id="cover-date-basis">
+                <option value="first">最初の投稿の日付</option>
+                <option value="latest" selected>最新の投稿の日付</option>
+              </select>
+              <span>で並べる</span>
+            </label>
           </div>
         </div>
 

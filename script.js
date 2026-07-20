@@ -12,6 +12,7 @@ const state = {
   showIndexTypeIcons: false,
   streamOrder: "newest",
   coverOrder: "newest",
+  coverDateBasis: "latest",
   coverFilters: {
     full: false,
     short: false,
@@ -824,11 +825,17 @@ function renderCovers() {
       const parent = rowById.get(groupId);
       const representative = parent && isCoverRow(parent) ? parent : sortedRows[0];
       const targetGroupRows = groupRows.filter((row) => targetRowSet.has(row));
-      const groupSortKey = parent && isCoverRow(parent)
-        ? parent.sortKey
-        : groupRows.reduce(
-            (min, row) => row.sortKey < min ? row.sortKey : min,
-            groupRows[0]?.sortKey || "99999999-9-999"
+      const groupSortKeys = groupRows
+        .map((row) => row.sortKey)
+        .filter(Boolean);
+      const groupSortKey = state.coverDateBasis === "latest"
+        ? groupSortKeys.reduce(
+            (max, sortKey) => sortKey > max ? sortKey : max,
+            groupSortKeys[0] || "00000000-0-000"
+          )
+        : groupSortKeys.reduce(
+            (min, sortKey) => sortKey < min ? sortKey : min,
+            groupSortKeys[0] || "99999999-9-999"
           );
       const hasFullCover = groupRows.some(isFullCoverRow);
       const targetIdSet = new Set(targetGroupRows.map((row) => row["歌唱ID"]));
@@ -1143,6 +1150,10 @@ function setupEvents() {
       $$(`[data-cover-order]`).forEach((item) => item.classList.toggle("active", item === button));
       renderCovers();
     });
+  });
+  $("#cover-date-basis").addEventListener("change", (event) => {
+    state.coverDateBasis = event.target.value;
+    renderCovers();
   });
   $("#stream-keyword").addEventListener("input", renderStreams);
   $$(`[data-stream-order]`).forEach((button) => {
